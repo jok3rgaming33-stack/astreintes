@@ -16,6 +16,8 @@ interface SidebarProps {
   incidents: NetworkIncident[];
   onAddIncident: (incident: NetworkIncident) => void;
   onRemoveIncident: (id: string) => void;
+  /** When true, disables the collapse button and fills the parent width (used in mobile sheet) */
+  mobileSheet?: boolean;
 }
 
 export default function Sidebar({
@@ -28,6 +30,7 @@ export default function Sidebar({
   incidents,
   onAddIncident,
   onRemoveIncident,
+  mobileSheet = false,
 }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
 
@@ -56,44 +59,46 @@ export default function Sidebar({
     <aside
       className="flex flex-col h-full transition-all duration-300 overflow-hidden"
       style={{
-        width: collapsed ? "56px" : "320px",
+        width: mobileSheet ? "100%" : collapsed ? "56px" : "320px",
         background: "var(--color-surface)",
-        borderRight: "1px solid var(--color-border)",
+        borderRight: mobileSheet ? "none" : "1px solid var(--color-border)",
         flexShrink: 0,
       }}
     >
-      {/* Header */}
-      <div
-        className="flex items-center gap-3 px-4 py-4"
-        style={{ borderBottom: "1px solid var(--color-border)" }}
-      >
-        {!collapsed && (
-          <div className="flex-1 min-w-0">
-            <h1 className="text-base font-bold leading-tight" style={{ color: "var(--color-text-primary)" }}>
-              Carte des équipes
-            </h1>
-            <p className="text-xs mt-0.5" style={{ color: "var(--color-text-secondary)" }}>
-              {filteredPeople.length} / {PEOPLE.length} personnes
-            </p>
-          </div>
-        )}
-        <button
-          onClick={() => setCollapsed((c) => !c)}
-          className="rounded-lg p-1.5 transition-colors hover:bg-white/10 flex-shrink-0"
-          style={{ color: "var(--color-text-secondary)" }}
-          title={collapsed ? "Agrandir" : "Réduire"}
+      {/* Header — hide in mobileSheet (the sheet already has its own handle/close) */}
+      {!mobileSheet && (
+        <div
+          className="flex items-center gap-3 px-4 py-4"
+          style={{ borderBottom: "1px solid var(--color-border)" }}
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            {collapsed ? (
-              <path d="M9 18l6-6-6-6" />
-            ) : (
-              <path d="M15 18l-6-6 6-6" />
-            )}
-          </svg>
-        </button>
-      </div>
+          {!collapsed && (
+            <div className="flex-1 min-w-0">
+              <h1 className="text-base font-bold leading-tight" style={{ color: "var(--color-text-primary)" }}>
+                Carte des équipes
+              </h1>
+              <p className="text-xs mt-0.5" style={{ color: "var(--color-text-secondary)" }}>
+                {filteredPeople.length} / {PEOPLE.length} personnes
+              </p>
+            </div>
+          )}
+          <button
+            onClick={() => setCollapsed((c) => !c)}
+            className="rounded-lg p-1.5 transition-colors hover:bg-white/10 flex-shrink-0"
+            style={{ color: "var(--color-text-secondary)" }}
+            title={collapsed ? "Agrandir" : "Réduire"}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              {collapsed ? (
+                <path d="M9 18l6-6-6-6" />
+              ) : (
+                <path d="M15 18l-6-6 6-6" />
+              )}
+            </svg>
+          </button>
+        </div>
+      )}
 
-      {!collapsed && (
+      {(!collapsed || mobileSheet) && (
         <>
           {/* Search */}
           <div className="px-4 py-3" style={{ borderBottom: "1px solid var(--color-border)" }}>

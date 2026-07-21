@@ -17,6 +17,39 @@ interface NominatimResult {
   lat: string;
   lon: string;
   display_name: string;
+  address?: {
+    road?: string;
+    house_number?: string;
+    city?: string;
+    town?: string;
+    village?: string;
+    municipality?: string;
+    county?: string;
+    postcode?: string;
+  };
+}
+
+/** Extract a human-readable primary line and secondary line from a Nominatim result */
+function parseSuggestion(result: NominatimResult): { primary: string; secondary: string } {
+  const addr = result.address;
+  if (addr) {
+    const parts: string[] = [];
+    if (addr.house_number) parts.push(addr.house_number);
+    if (addr.road) parts.push(addr.road);
+    const primary = parts.length > 0 ? parts.join(" ") : result.display_name.split(",")[0].trim();
+
+    const cityName =
+      addr.city || addr.town || addr.village || addr.municipality || addr.county || "";
+    const secondary = [addr.postcode, cityName].filter(Boolean).join(" ");
+
+    return { primary: primary || result.display_name.split(",")[0], secondary };
+  }
+  // fallback: split display_name by comma
+  const segments = result.display_name.split(",").map((s) => s.trim());
+  return {
+    primary: segments[0],
+    secondary: segments.slice(1, 3).join(", "),
+  };
 }
 
 export default function AddressSearch({ onAddIncident }: AddressSearchProps) {
@@ -36,7 +69,7 @@ export default function AddressSearch({ onAddIncident }: AddressSearchProps) {
     setError(null);
     try {
       const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=fr&q=${encodeURIComponent(value)}`,
+        `https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=fr&addressdetails=1&q=${encodeURIComponent(value)}`,
         { headers: { "Accept-Language": "fr" } }
       );
       const data: NominatimResult[] = await res.json();
@@ -56,14 +89,16 @@ export default function AddressSearch({ onAddIncident }: AddressSearchProps) {
   };
 
   const handleSelect = (result: NominatimResult) => {
+    const { primary, secondary } = parseSuggestion(result);
+    const label = secondary ? `${primary}, ${secondary}` : primary;
     const incident: NetworkIncident = {
       id: `addr-${Date.now()}`,
       lat: parseFloat(result.lat),
       lng: parseFloat(result.lon),
-      label: result.display_name,
+      label,
     };
     onAddIncident(incident);
-    setQuery(result.display_name.split(",")[0]);
+    setQuery(primary);
     setSuggestions([]);
     setError(null);
   };
@@ -78,15 +113,17 @@ export default function AddressSearch({ onAddIncident }: AddressSearchProps) {
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const { latitude, longitude } = pos.coords;
-        // Reverse geocode to get a label
         let label = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
         try {
           const res = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
+            `https://nominatim.openstreetmap.org/reverse?format=json&addressdetails=1&lat=${latitude}&lon=${longitude}`,
             { headers: { "Accept-Language": "fr" } }
           );
-          const data = await res.json();
-          if (data.display_name) label = data.display_name;
+          const data: NominatimResult = await res.json();
+          if (data.display_name) {
+            const { primary, secondary } = parseSuggestion(data);
+            label = secondary ? `${primary}, ${secondary}` : primary;
+          }
         } catch {
           // use raw coords as fallback
         }
@@ -118,7 +155,6 @@ export default function AddressSearch({ onAddIncident }: AddressSearchProps) {
       {/* Address input */}
       <div className="relative">
         <div className="relative">
-          {/* wifi-off icon */}
           <span
             className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
             style={{ color: "var(--color-text-secondary)", opacity: 0.6 }}
@@ -175,20 +211,23 @@ export default function AddressSearch({ onAddIncident }: AddressSearchProps) {
               boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
             }}
           >
-            {suggestions.map((s, i) => (
-              <li key={i}>
-                <button
-                  className="w-full text-left px-3 py-2 text-xs transition-colors hover:bg-white/10"
-                  style={{ color: "var(--color-text-primary)" }}
-                  onClick={() => handleSelect(s)}
-                >
-                  <span className="font-medium">{s.display_name.split(",")[0]}</span>
-                  <span className="block opacity-50 truncate">
-                    {s.display_name.split(",").slice(1, 3).join(",")}
-                  </span>
-                </button>
-              </li>
-            ))}
+            {suggestions.map((s, i) => {
+              const { primary, secondary } = parseSuggestion(s);
+              return (
+                <li key={i}>
+                  <button
+                    className="w-full text-left px-3 py-2.5 text-xs transition-colors hover:bg-white/10 flex flex-col gap-0.5"
+                    style={{ color: "var(--color-text-primary)" }}
+                    onClick={() => handleSelect(s)}
+                  >
+                    <span className="font-semibold text-sm leading-tight">{primary}</span>
+                    {secondary && (
+                      <span className="opacity-50 truncate">{secondary}</span>
+                    )}
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>
