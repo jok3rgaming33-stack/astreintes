@@ -54,16 +54,14 @@ export default function MapComponent({
 
     mapRef.current = map;
 
-    // Load department GeoJSON from the official French government geo API
-    // (CORS-open, always available, no third-party dependency)
-    fetch(
-      "https://geo.api.gouv.fr/departements?fields=code,nom,contour&format=geojson&geometry=contour"
-    )
-      .then((r) => r.json())
+    // Load department GeoJSON from local public asset — no CORS, no external dep
+    fetch("/departements.geojson")
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((geojson) => {
         if (!mapRef.current) return;
-
-        console.log("[v0] GeoJSON loaded, features:", geojson?.features?.length);
 
         // ── Layer 1: thin blue outline on every department ──────────────────
         const deptLayer = L.geoJSON(geojson, {
@@ -83,7 +81,6 @@ export default function MapComponent({
           (f: { properties: { code: string } }) =>
             NOUVELLE_AQUITAINE_DEPTS.has(f.properties.code)
         );
-        console.log("[v0] NA departments found:", naFeatures.length);
 
         if (naFeatures.length > 0) {
           const naFillLayer = L.geoJSON(
@@ -121,8 +118,7 @@ export default function MapComponent({
           geoLayersRef.current.push(regionOutline);
         }
       })
-      .catch((err) => {
-        console.log("[v0] GeoJSON fetch failed:", err);
+      .catch(() => {
         // Map still works without boundaries
       });
 
