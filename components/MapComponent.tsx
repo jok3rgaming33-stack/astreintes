@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import L from "leaflet";
+import type { FeatureCollection } from "geojson";
 import { PEOPLE, ROLE_COLORS, ROLE_LABELS, type Person, type Role } from "@/lib/people";
 import type { NetworkIncident } from "@/components/AddressSearch";
 
@@ -86,7 +87,7 @@ export default function MapComponent({
         );
         if (naFeatures.length > 0) {
           const regionLayer = L.geoJSON(
-            { type: "FeatureCollection", features: naFeatures },
+            { type: "FeatureCollection", features: naFeatures } as FeatureCollection,
             {
               style: {
                 color: "#7c3aed",
