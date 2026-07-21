@@ -87,7 +87,8 @@ export default function MapComponent({
         );
         if (naFeatures.length > 0) {
           const regionLayer = L.geoJSON(
-            { type: "FeatureCollection", features: naFeatures } as L.GeoJsonObject,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            { type: "FeatureCollection", features: naFeatures } as any,
             {
               style: {
                 color: "#7c3aed",
