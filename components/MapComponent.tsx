@@ -71,6 +71,8 @@ interface MapComponentProps {
   clickToPlaceMode?: boolean;
   /** Called with lat/lng when the user clicks the map in place mode */
   onMapClick?: (lat: number, lng: number) => void;
+  /** Called when the user clicks an existing incident marker */
+  onIncidentClick?: (incident: NetworkIncident) => void;
 }
 
 export default function MapComponent({
@@ -84,12 +86,16 @@ export default function MapComponent({
   holidayNoms = new Set(),
   clickToPlaceMode = false,
   onMapClick,
+  onIncidentClick,
 }: MapComponentProps) {
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<Map<Person, L.Marker>>(new Map());
   const incidentMarkersRef = useRef<Map<string, L.Marker>>(new Map());
   const containerRef = useRef<HTMLDivElement>(null);
   const geoLayersRef = useRef<L.Layer[]>([]);
+  // Keep latest callback in a ref so incident markers don't need to be recreated on prop change
+  const onIncidentClickRef = useRef(onIncidentClick);
+  useEffect(() => { onIncidentClickRef.current = onIncidentClick; }, [onIncidentClick]);
 
   // Initialize map
   useEffect(() => {
@@ -311,7 +317,10 @@ export default function MapComponent({
           `<div style="font-size:12px;font-weight:600;color:#ef4444;margin-bottom:4px;">Panne réseau signalée</div>
            <div style="font-size:11px;color:#94a3b8;">${shortLabel}</div>`,
           { maxWidth: 240 }
-        );
+        )
+        .on("click", () => {
+          onIncidentClickRef.current?.(incident);
+        });
 
       incidentMarkersRef.current.set(incident.id, marker);
 

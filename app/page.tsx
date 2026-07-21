@@ -222,6 +222,30 @@ export default function Home() {
     [handleAddIncident]
   );
 
+  // Open the RouteResults panel when clicking an existing incident marker
+  const handleIncidentClick = useCallback(
+    async (incident: NetworkIncident) => {
+      // If already showing this incident's results, do nothing
+      if (activeRouteIncident?.id === incident.id && !routeLoading) return;
+
+      setActiveRouteIncident(incident);
+      setRouteResults([]);
+      setRouteLoading(true);
+      try {
+        const results = await computeRouteResults(
+          incident.lat,
+          incident.lng,
+          onCallNoms,
+          holidayNoms
+        );
+        setRouteResults(results);
+      } finally {
+        setRouteLoading(false);
+      }
+    },
+    [activeRouteIncident, routeLoading, onCallNoms, holidayNoms]
+  );
+
   const handleRemoveIncident = useCallback(
     (id: string) => {
       setIncidents((prev) => prev.filter((inc) => inc.id !== id));
@@ -269,6 +293,7 @@ export default function Home() {
           holidayNoms={holidayNoms}
           clickToPlaceMode={clickToPlaceMode}
           onMapClick={handleMapClick}
+          onIncidentClick={handleIncidentClick}
         />
 
         {/* Place-incident toggle button */}
