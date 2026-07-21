@@ -78,3 +78,27 @@ html, body {
   box-shadow: 0 4px 16px rgba(0,0,0,0.6);
   z-index: 9999 !important;
 }
+
+/* WiFi down signal marker */
+.wifi-down-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50% 50% 50% 0;
+  background-color: #ef4444;
+  color: white;
+  box-shadow: 0 3px 12px rgba(239, 68, 68, 0.6);
+  border: 2.5px solid white;
+  transform: rotate(-45deg);
+  transition: transform 0.15s ease;
+}
+
+.wifi-down-marker svg {
+  transform: rotate(45deg);
+}
+
+.wifi-down-marker:hover {
+  transform: rotate(-45deg) scale(1.2);
+}

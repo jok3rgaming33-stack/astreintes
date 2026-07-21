@@ -5,6 +5,7 @@ import { useState, useCallback } from "react";
 import Sidebar from "@/components/Sidebar";
 import PersonCard from "@/components/PersonCard";
 import { type Person, type Role } from "@/lib/people";
+import type { SignalPoint } from "@/components/AddressSearch";
 
 const MapComponent = dynamic(() => import("@/components/MapComponent"), {
   ssr: false,
@@ -29,6 +30,8 @@ export default function Home() {
   const [activeRoles, setActiveRoles] = useState<Set<Role>>(new Set(ALL_ROLES));
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
+  const [signalPoint, setSignalPoint] = useState<SignalPoint | null>(null);
+  const [clickModeActive, setClickModeActive] = useState(false);
 
   const handleToggleRole = useCallback((role: Role) => {
     setActiveRoles((prev) => {
@@ -46,6 +49,11 @@ export default function Home() {
     setSelectedPerson(person);
   }, []);
 
+  const handleSignal = useCallback((point: SignalPoint) => {
+    setSignalPoint(point);
+    setClickModeActive(false);
+  }, []);
+
   return (
     <main className="flex h-screen w-full overflow-hidden">
       <Sidebar
@@ -55,6 +63,9 @@ export default function Home() {
         onSearch={setSearchQuery}
         onPersonSelect={handlePersonSelect}
         selectedPerson={selectedPerson}
+        onSignal={handleSignal}
+        clickModeActive={clickModeActive}
+        onClickModeChange={setClickModeActive}
       />
       <div className="relative flex-1 h-full">
         <MapComponent
@@ -62,6 +73,9 @@ export default function Home() {
           searchQuery={searchQuery}
           onPersonSelect={handlePersonSelect}
           selectedPerson={selectedPerson}
+          signalPoint={signalPoint}
+          clickModeActive={clickModeActive}
+          onMapClick={handleSignal}
         />
         {selectedPerson && (
           <PersonCard

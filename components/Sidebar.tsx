@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { PEOPLE, ROLE_COLORS, ROLE_LABELS, type Person, type Role } from "@/lib/people";
+import AddressSearch, { type SignalPoint } from "@/components/AddressSearch";
 
 const ALL_ROLES: Role[] = ["CIR", "REF", "TMF", "TMRa", "TMRe"];
 
@@ -12,6 +13,9 @@ interface SidebarProps {
   onSearch: (q: string) => void;
   onPersonSelect: (person: Person) => void;
   selectedPerson: Person | null;
+  onSignal: (point: SignalPoint) => void;
+  clickModeActive: boolean;
+  onClickModeChange: (active: boolean) => void;
 }
 
 export default function Sidebar({
@@ -21,6 +25,9 @@ export default function Sidebar({
   onSearch,
   onPersonSelect,
   selectedPerson,
+  onSignal,
+  clickModeActive,
+  onClickModeChange,
 }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
 
@@ -162,6 +169,13 @@ export default function Sidebar({
               })}
             </div>
           </div>
+
+          {/* Signal WiFi HS */}
+          <AddressSearch
+            onSignal={onSignal}
+            clickModeActive={clickModeActive}
+            onClickModeChange={onClickModeChange}
+          />
 
           {/* People list */}
           <div className="flex-1 overflow-y-auto px-3 py-3">
