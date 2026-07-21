@@ -163,6 +163,38 @@ export default function Home() {
     setSelectedPerson(person);
   }, []);
 
+  // Click-to-place mode
+  const [clickToPlaceMode, setClickToPlaceMode] = useState(false);
+
+  const handleMapClick = useCallback(
+    async (lat: number, lng: number) => {
+      // Exit place mode immediately so a second click doesn't place again
+      setClickToPlaceMode(false);
+
+      // Reverse geocode with Nominatim to get a human-readable label
+      let label = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+      try {
+        const r = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`,
+          { headers: { "Accept-Language": "fr" } }
+        );
+        if (r.ok) {
+          const data = await r.json();
+          label = data.display_name ?? label;
+        }
+      } catch { /* keep coordinate label */ }
+
+      const incident: NetworkIncident = {
+        id: `map-click-${Date.now()}`,
+        label,
+        lat,
+        lng,
+      };
+      await handleAddIncident(incident);
+    },
+    [handleAddIncident]
+  );
+
   // Routing results panel
   const [activeRouteIncident, setActiveRouteIncident] = useState<NetworkIncident | null>(null);
   const [routeResults, setRouteResults] = useState<RouteResult[]>([]);
@@ -239,7 +271,62 @@ export default function Home() {
           onCallNoms={onCallNoms}
           routeResultPersons={new Set(routeResults.filter((r) => !r.isOnCall).map((r) => r.person.nom))}
           holidayNoms={holidayNoms}
+          clickToPlaceMode={clickToPlaceMode}
+          onMapClick={handleMapClick}
         />
+
+        {/* Place-incident toggle button */}
+        <button
+          onClick={() => setClickToPlaceMode((v) => !v)}
+          className="absolute top-3 left-3 z-[1000] flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold shadow-lg transition-all active:scale-95"
+          style={{
+            background: clickToPlaceMode ? "#ef4444" : "var(--color-surface)",
+            border: `1px solid ${clickToPlaceMode ? "#ef4444" : "var(--color-border)"}`,
+            color: clickToPlaceMode ? "#fff" : "var(--color-text-primary)",
+            boxShadow: clickToPlaceMode ? "0 0 0 3px rgba(239,68,68,0.3)" : "0 2px 12px rgba(0,0,0,0.4)",
+          }}
+          title={clickToPlaceMode ? "Annuler — cliquez pour annuler le placement" : "Cliquer sur la carte pour signaler une panne"}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            {clickToPlaceMode ? (
+              /* X icon when active */
+              <>
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </>
+            ) : (
+              /* wifi-off icon */
+              <>
+                <line x1="1" y1="1" x2="23" y2="23"/>
+                <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/>
+                <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/>
+                <path d="M10.71 5.05A16 16 0 0 1 22.56 9"/>
+                <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/>
+                <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+                <line x1="12" y1="20" x2="12.01" y2="20"/>
+              </>
+            )}
+          </svg>
+          {clickToPlaceMode ? "Annuler" : "Signaler une panne"}
+        </button>
+
+        {/* Crosshair hint overlay when click-to-place is active */}
+        {clickToPlaceMode && (
+          <div
+            className="absolute inset-x-0 top-14 z-[999] flex justify-center pointer-events-none"
+          >
+            <div
+              className="px-4 py-2 rounded-full text-xs font-medium shadow-xl"
+              style={{
+                background: "rgba(239,68,68,0.92)",
+                color: "#fff",
+                backdropFilter: "blur(4px)",
+              }}
+            >
+              Cliquez sur la carte pour marquer la panne
+            </div>
+          </div>
+        )}
 
         {selectedPerson && (
           <PersonCard

@@ -67,6 +67,10 @@ interface MapComponentProps {
   routeResultPersons?: Set<string>;
   /** Persons flagged as on holiday — shown greyed out on the map */
   holidayNoms?: Set<string>;
+  /** When true, next map click places an incident marker */
+  clickToPlaceMode?: boolean;
+  /** Called with lat/lng when the user clicks the map in place mode */
+  onMapClick?: (lat: number, lng: number) => void;
 }
 
 export default function MapComponent({
@@ -78,6 +82,8 @@ export default function MapComponent({
   onCallNoms,
   routeResultPersons = new Set(),
   holidayNoms = new Set(),
+  clickToPlaceMode = false,
+  onMapClick,
 }: MapComponentProps) {
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<Map<Person, L.Marker>>(new Map());
@@ -236,6 +242,23 @@ export default function MapComponent({
     });
   }, [activeRoles, searchQuery, onCallNoms, routeResultPersons]);
 
+  // Toggle crosshair cursor and map click handler for place-incident mode
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    const container = map.getContainer();
+    container.style.cursor = clickToPlaceMode ? "crosshair" : "";
+
+    if (!clickToPlaceMode || !onMapClick) return;
+
+    const handler = (e: L.LeafletMouseEvent) => {
+      onMapClick(e.latlng.lat, e.latlng.lng);
+    };
+    map.on("click", handler);
+    return () => { map.off("click", handler); };
+  }, [clickToPlaceMode, onMapClick]);
+
   // Fly to selected person
   useEffect(() => {
     const map = mapRef.current;
@@ -282,7 +305,7 @@ export default function MapComponent({
 
       const shortLabel = incident.label.split(",").slice(0, 2).join(",");
 
-      const marker = L.marker([incident.lat, incident.lng], { icon })
+      const marker = L.marker([incident.lat, incident.lng], { icon, zIndexOffset: 2000 })
         .addTo(map)
         .bindPopup(
           `<div style="font-size:12px;font-weight:600;color:#ef4444;margin-bottom:4px;">Panne réseau signalée</div>
@@ -297,5 +320,5 @@ export default function MapComponent({
     });
   }, [incidents]);
 
-  return <div ref={containerRef} className="w-full h-full" />;
+  return <div ref={containerRef} className="w-full h-full" style={{ cursor: clickToPlaceMode ? "crosshair" : undefined }} />;
 }
