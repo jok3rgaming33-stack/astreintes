@@ -6,9 +6,13 @@ import L from "leaflet";
 import { PEOPLE, ROLE_COLORS, ROLE_LABELS, type Person, type Role } from "@/lib/people";
 import type { NetworkIncident } from "@/components/AddressSearch";
 
-// Department codes for Nouvelle-Aquitaine region
+// Department codes for Nouvelle-Aquitaine region highlighted on the map.
+// 40 (Landes), 47 (Lot-et-Garonne) and 64 (Pyrénées-Atlantiques) are excluded
+// from the fill/outline highlight. Their shared borders with 33 and 24 remain
+// visible because dept 33 and 24 are still in the set and their violet outline
+// naturally traces the boundary line between them.
 const NOUVELLE_AQUITAINE_DEPTS = new Set([
-  "16", "17", "19", "23", "24", "33", "40", "47", "64", "79", "86", "87",
+  "16", "17", "19", "23", "24", "33", "79", "86", "87",
 ]);
 
 interface MapComponentProps {
