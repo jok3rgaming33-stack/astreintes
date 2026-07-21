@@ -23,8 +23,12 @@ html, body {
   background-color: var(--color-background);
   color: var(--color-text-primary);
   font-family: var(--font-sans);
-  height: 100%;
+  /* dvh = dynamic viewport height: shrinks/grows with the browser chrome on mobile */
+  height: 100dvh;
   margin: 0;
+  /* Respect iOS home indicator and Android gesture nav bar */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  overflow: hidden;
 }
 
 /* Leaflet popup overrides */

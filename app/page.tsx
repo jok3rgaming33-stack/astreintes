@@ -36,11 +36,8 @@ export default function Home() {
   const handleToggleRole = useCallback((role: Role) => {
     setActiveRoles((prev) => {
       const next = new Set(prev);
-      if (next.has(role)) {
-        next.delete(role);
-      } else {
-        next.add(role);
-      }
+      if (next.has(role)) next.delete(role);
+      else next.add(role);
       return next;
     });
   }, []);
@@ -58,7 +55,9 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="flex h-screen w-full overflow-hidden">
+    /* 100dvh = dynamic viewport height: shrinks when the browser chrome appears on mobile */
+    <main className="flex w-full overflow-hidden" style={{ height: "100dvh" }}>
+
       {/* ── Desktop sidebar (hidden on mobile) ── */}
       <div className="hidden md:flex h-full">
         <Sidebar
@@ -91,10 +90,11 @@ export default function Home() {
           />
         )}
 
-        {/* ── Mobile FAB to open sheet ── */}
+        {/* ── Mobile FAB — positioned above safe-area (home indicator / nav bar) ── */}
         <button
-          className="md:hidden absolute bottom-6 left-1/2 -translate-x-1/2 z-[1000] flex items-center gap-2 px-5 py-3 rounded-full text-sm font-semibold shadow-2xl transition-all active:scale-95"
+          className="md:hidden absolute left-1/2 -translate-x-1/2 z-[1000] flex items-center gap-2 px-5 py-3 rounded-full text-sm font-semibold transition-all active:scale-95"
           style={{
+            bottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))",
             background: "var(--color-accent)",
             color: "#fff",
             boxShadow: "0 4px 24px rgba(0,0,0,0.4)",
@@ -119,25 +119,23 @@ export default function Home() {
           {/* Backdrop */}
           <div className="absolute inset-0 bg-black/50" />
 
-          {/* Sheet */}
+          {/* Sheet — paddingBottom ensures content clears the OS navigation bar */}
           <div
             className="relative flex flex-col rounded-t-2xl overflow-hidden"
             style={{
               background: "var(--color-surface)",
               maxHeight: "85dvh",
               border: "1px solid var(--color-border)",
+              paddingBottom: "env(safe-area-inset-bottom, 0px)",
             }}
           >
-            {/* Drag handle + close */}
+            {/* Drag handle + close button */}
             <div
               className="flex items-center justify-between px-4 py-3 flex-shrink-0"
               style={{ borderBottom: "1px solid var(--color-border)" }}
             >
               <div className="flex-1 flex justify-center">
-                <div
-                  className="w-10 h-1 rounded-full"
-                  style={{ background: "var(--color-border)" }}
-                />
+                <div className="w-10 h-1 rounded-full" style={{ background: "var(--color-border)" }} />
               </div>
               <button
                 onClick={() => setMobileSheetOpen(false)}
@@ -151,7 +149,7 @@ export default function Home() {
               </button>
             </div>
 
-            {/* Sidebar content (no collapse button, full width) */}
+            {/* Sidebar content inside the sheet */}
             <div className="flex-1 overflow-y-auto">
               <Sidebar
                 activeRoles={activeRoles}
