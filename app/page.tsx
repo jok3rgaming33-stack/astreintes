@@ -5,6 +5,7 @@ import { useState, useCallback } from "react";
 import Sidebar from "@/components/Sidebar";
 import PersonCard from "@/components/PersonCard";
 import { type Person, type Role } from "@/lib/people";
+import { type NetworkIncident } from "@/components/AddressSearch";
 
 const MapComponent = dynamic(() => import("@/components/MapComponent"), {
   ssr: false,
@@ -29,6 +30,7 @@ export default function Home() {
   const [activeRoles, setActiveRoles] = useState<Set<Role>>(new Set(ALL_ROLES));
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
+  const [incidents, setIncidents] = useState<NetworkIncident[]>([]);
 
   const handleToggleRole = useCallback((role: Role) => {
     setActiveRoles((prev) => {
@@ -46,6 +48,10 @@ export default function Home() {
     setSelectedPerson(person);
   }, []);
 
+  const handleAddIncident = useCallback((incident: NetworkIncident) => {
+    setIncidents((prev) => [...prev, incident]);
+  }, []);
+
   return (
     <main className="flex h-screen w-full overflow-hidden">
       <Sidebar
@@ -55,6 +61,8 @@ export default function Home() {
         onSearch={setSearchQuery}
         onPersonSelect={handlePersonSelect}
         selectedPerson={selectedPerson}
+        incidents={incidents}
+        onAddIncident={handleAddIncident}
       />
       <div className="relative flex-1 h-full">
         <MapComponent
@@ -62,6 +70,7 @@ export default function Home() {
           searchQuery={searchQuery}
           onPersonSelect={handlePersonSelect}
           selectedPerson={selectedPerson}
+          incidents={incidents}
         />
         {selectedPerson && (
           <PersonCard

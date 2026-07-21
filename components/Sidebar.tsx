@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { PEOPLE, ROLE_COLORS, ROLE_LABELS, type Person, type Role } from "@/lib/people";
+import AddressSearch, { type NetworkIncident } from "@/components/AddressSearch";
 
 const ALL_ROLES: Role[] = ["CIR", "REF", "TMF", "TMRa", "TMRe"];
 
@@ -12,6 +13,8 @@ interface SidebarProps {
   onSearch: (q: string) => void;
   onPersonSelect: (person: Person) => void;
   selectedPerson: Person | null;
+  incidents: NetworkIncident[];
+  onAddIncident: (incident: NetworkIncident) => void;
 }
 
 export default function Sidebar({
@@ -21,6 +24,8 @@ export default function Sidebar({
   onSearch,
   onPersonSelect,
   selectedPerson,
+  incidents,
+  onAddIncident,
 }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
 
@@ -161,6 +166,38 @@ export default function Sidebar({
                 );
               })}
             </div>
+          </div>
+
+          {/* Network incident reporting */}
+          <div className="px-4 py-3" style={{ borderBottom: "1px solid var(--color-border)" }}>
+            <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--color-text-secondary)" }}>
+              Signaler une panne réseau
+            </p>
+            <AddressSearch onAddIncident={onAddIncident} />
+            {incidents.length > 0 && (
+              <div className="mt-3 flex flex-col gap-1">
+                {incidents.map((inc) => (
+                  <div
+                    key={inc.id}
+                    className="flex items-start gap-2 px-2 py-1.5 rounded-lg"
+                    style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)" }}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 flex-shrink-0">
+                      <line x1="1" y1="1" x2="23" y2="23"/>
+                      <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/>
+                      <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/>
+                      <path d="M10.71 5.05A16 16 0 0 1 22.56 9"/>
+                      <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/>
+                      <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+                      <line x1="12" y1="20" x2="12.01" y2="20"/>
+                    </svg>
+                    <span className="text-xs leading-tight truncate" style={{ color: "#ef4444" }}>
+                      {inc.label.split(",")[0]}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* People list */}
