@@ -54,18 +54,21 @@ export default function MapComponent({
 
     mapRef.current = map;
 
-    // Load department GeoJSON and draw boundaries
+    // Load department GeoJSON from the official French government geo API
+    // (CORS-open, always available, no third-party dependency)
     fetch(
-      "https://france-geojson.gregoiredavid.fr/repo/departements.geojson"
+      "https://geo.api.gouv.fr/departements?fields=code,nom,contour&format=geojson&geometry=contour"
     )
       .then((r) => r.json())
       .then((geojson) => {
         if (!mapRef.current) return;
 
-        // ── Layer 1: thin blue outline on every department ─────────────────
+        console.log("[v0] GeoJSON loaded, features:", geojson?.features?.length);
+
+        // ── Layer 1: thin blue outline on every department ──────────────────
         const deptLayer = L.geoJSON(geojson, {
           style: () => ({
-            color: "#4b6cb7",      // blue outline for all depts
+            color: "#4b6cb7",
             weight: 1,
             opacity: 0.6,
             fillOpacity: 0,
@@ -75,11 +78,13 @@ export default function MapComponent({
         deptLayer.addTo(mapRef.current);
         geoLayersRef.current.push(deptLayer);
 
-        // ── Layer 2: light-blue fill + stronger blue border inside NA ──────
-        const naFeatures: unknown[] = geojson.features.filter(
+        // ── Layer 2: light-blue fill + stronger blue border inside NA ───────
+        const naFeatures: unknown[] = (geojson.features ?? []).filter(
           (f: { properties: { code: string } }) =>
             NOUVELLE_AQUITAINE_DEPTS.has(f.properties.code)
         );
+        console.log("[v0] NA departments found:", naFeatures.length);
+
         if (naFeatures.length > 0) {
           const naFillLayer = L.geoJSON(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -87,10 +92,10 @@ export default function MapComponent({
             {
               style: {
                 color: "#4b6cb7",
-                weight: 1.5,
-                opacity: 0.85,
+                weight: 2,
+                opacity: 0.9,
                 fillColor: "#4b6cb7",
-                fillOpacity: 0.07,
+                fillOpacity: 0.08,
                 interactive: false,
               },
             }
@@ -98,13 +103,13 @@ export default function MapComponent({
           naFillLayer.addTo(mapRef.current);
           geoLayersRef.current.push(naFillLayer);
 
-          // ── Layer 3: thick violet outline on the outer edge of NA region ──
+          // ── Layer 3: thick violet outline on the outer edge of NA ─────────
           const regionOutline = L.geoJSON(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             { type: "FeatureCollection", features: naFeatures } as any,
             {
               style: {
-                color: "#7c3aed",  // violet
+                color: "#7c3aed",
                 weight: 4,
                 opacity: 1,
                 fillOpacity: 0,
@@ -116,8 +121,9 @@ export default function MapComponent({
           geoLayersRef.current.push(regionOutline);
         }
       })
-      .catch(() => {
-        // GeoJSON unavailable — map still works without boundaries
+      .catch((err) => {
+        console.log("[v0] GeoJSON fetch failed:", err);
+        // Map still works without boundaries
       });
 
     // Create markers for all people
