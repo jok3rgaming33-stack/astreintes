@@ -239,15 +239,18 @@ export default function Home() {
       setClickToPlaceMode(false);
       let label = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
       try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 5000);
         const r = await fetch(
           `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`,
-          { headers: { "Accept-Language": "fr" } }
+          { headers: { "Accept-Language": "fr" }, signal: controller.signal }
         );
+        clearTimeout(timeout);
         if (r.ok) {
           const data = await r.json();
           label = data.display_name ?? label;
         }
-      } catch { /* keep coordinate label */ }
+      } catch { /* keep coordinate label on error or timeout */ }
 
       await handleAddIncident({
         id: `map-click-${Date.now()}`,

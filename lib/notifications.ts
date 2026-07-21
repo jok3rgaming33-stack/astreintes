@@ -16,11 +16,15 @@ export async function requestNotifPermission(): Promise<NotifPermission> {
   if (typeof window === "undefined" || !("Notification" in window)) return "denied";
   if (Notification.permission === "granted") return "granted";
   if (Notification.permission === "denied") return "denied";
-  const result = await Notification.requestPermission();
-  return result as NotifPermission;
+  try {
+    const result = await Notification.requestPermission();
+    return result as NotifPermission;
+  } catch {
+    return "denied";
+  }
 }
 
-/** Fire a notification. Silently no-ops if permission not granted. */
+/** Fire a notification. Silently no-ops if permission not granted or API unsupported. */
 export function sendNotification(
   title: string,
   options?: { body?: string; icon?: string; tag?: string }
@@ -28,14 +32,17 @@ export function sendNotification(
   if (typeof window === "undefined" || !("Notification" in window)) return;
   if (Notification.permission !== "granted") return;
 
-  const n = new Notification(title, {
-    icon: "/icon.jpg",
-    badge: "/icon.jpg",
-    ...options,
-  });
-
-  // Auto-close after 8 s
-  setTimeout(() => n.close(), 8000);
+  try {
+    const n = new Notification(title, {
+      icon: "/icon.jpg",
+      badge: "/icon.jpg",
+      ...options,
+    });
+    // Auto-close after 8 s
+    setTimeout(() => { try { n.close(); } catch { /* ignore */ } }, 8000);
+  } catch {
+    // iOS Safari and some mobile browsers throw on new Notification() outside SW context
+  }
 }
 
 /**
