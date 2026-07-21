@@ -188,7 +188,9 @@ export default function MapComponent({
       const marker = markersRef.current.get(person);
       if (!marker) return;
 
-      const matchesRole = activeRoles.has(person.role);
+      // On-call persons stay visible regardless of role filter
+      const isOnCall = onCallNoms.has(person.nom);
+      const matchesRole = activeRoles.has(person.role) || isOnCall;
       const matchesSearch =
         q === "" ||
         person.nom.toLowerCase().includes(q) ||
@@ -201,7 +203,7 @@ export default function MapComponent({
         if (map.hasLayer(marker)) marker.removeFrom(map);
       }
     });
-  }, [activeRoles, searchQuery]);
+  }, [activeRoles, searchQuery, onCallNoms]);
 
   // Fly to selected person
   useEffect(() => {

@@ -47,7 +47,8 @@ export default function Sidebar({
   const filteredPeople = useMemo(() => {
     const q = searchQuery.toLowerCase();
     return PEOPLE.filter((p) => {
-      const matchesRole = activeRoles.has(p.role);
+      // On-call persons are always shown regardless of role filter
+      const matchesRole = activeRoles.has(p.role) || effectiveOnCallNoms.has(p.nom);
       const matchesSearch =
         q === "" ||
         p.nom.toLowerCase().includes(q) ||
@@ -55,7 +56,7 @@ export default function Sidebar({
         p.ville.toLowerCase().includes(q);
       return matchesRole && matchesSearch;
     });
-  }, [activeRoles, searchQuery]);
+  }, [activeRoles, searchQuery, effectiveOnCallNoms]);
 
   const countByRole = useMemo(() => {
     const counts: Partial<Record<Role, number>> = {};
