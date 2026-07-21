@@ -194,13 +194,16 @@ export default function MapComponent({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Refresh marker icons when on-call, proximity or holiday sets change
+  // Refresh marker icons + z-order when on-call, proximity or holiday sets change
   useEffect(() => {
     markersRef.current.forEach((marker, person) => {
       const isHoliday = holidayNoms.has(person.nom);
       const isOnCall = !isHoliday && onCallNoms.has(person.nom);
       const isProximity = !isHoliday && !isOnCall && routeResultPersons.has(person.nom);
       marker.setIcon(buildPersonIcon(person, isOnCall, isProximity, isHoliday));
+      // On-call on top (1000), proximity second (500), holiday at the back (-100), normal at 0
+      const zOffset = isOnCall ? 1000 : isProximity ? 500 : isHoliday ? -100 : 0;
+      marker.setZIndexOffset(zOffset);
     });
   }, [onCallNoms, routeResultPersons, holidayNoms]);
 
