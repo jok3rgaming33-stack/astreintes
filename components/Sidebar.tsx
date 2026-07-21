@@ -21,6 +21,12 @@ interface SidebarProps {
   mobileSheet?: boolean;
   /** Set of person noms currently on-call — shown as a banner and highlighted in the list */
   onCallNoms?: Set<string>;
+  /** Set of person noms currently on holiday — excluded from routing */
+  holidayNoms?: Set<string>;
+  /** Toggle a person into/out of the on-call set manually */
+  onToggleOnCall?: (nom: string) => void;
+  /** Toggle a person into/out of the holiday set */
+  onToggleHoliday?: (nom: string) => void;
 }
 
 export default function Sidebar({
@@ -35,6 +41,9 @@ export default function Sidebar({
   onRemoveIncident,
   mobileSheet = false,
   onCallNoms,
+  holidayNoms = new Set(),
+  onToggleOnCall,
+  onToggleHoliday,
 }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
 
@@ -47,8 +56,11 @@ export default function Sidebar({
   const filteredPeople = useMemo(() => {
     const q = searchQuery.toLowerCase();
     return PEOPLE.filter((p) => {
-      // On-call persons are always shown regardless of role filter
-      const matchesRole = activeRoles.has(p.role) || effectiveOnCallNoms.has(p.nom);
+      // On-call persons always shown regardless of role filter (holiday persons too — but greyed)
+      const matchesRole =
+        activeRoles.has(p.role) ||
+        effectiveOnCallNoms.has(p.nom) ||
+        holidayNoms.has(p.nom);
       const matchesSearch =
         q === "" ||
         p.nom.toLowerCase().includes(q) ||
@@ -56,7 +68,7 @@ export default function Sidebar({
         p.ville.toLowerCase().includes(q);
       return matchesRole && matchesSearch;
     });
-  }, [activeRoles, searchQuery, effectiveOnCallNoms]);
+  }, [activeRoles, searchQuery, effectiveOnCallNoms, holidayNoms]);
 
   const countByRole = useMemo(() => {
     const counts: Partial<Record<Role, number>> = {};
@@ -155,7 +167,7 @@ export default function Sidebar({
                 En astreinte aujourd&apos;hui
               </p>
               <div className="flex flex-col gap-1">
-                {PEOPLE.filter((p) => effectiveOnCallNoms.has(p.nom)).map((p) => {
+                {PEOPLE.filter((p) => effectiveOnCallNoms.has(p.nom) && !holidayNoms.has(p.nom)).map((p) => {
                   const color = ROLE_COLORS[p.role];
                   const initials = `${p.prenom[0]}${p.nom[0]}`.toUpperCase();
                   return (
@@ -284,49 +296,103 @@ export default function Sidebar({
                   const initials = `${person.prenom[0]}${person.nom[0]}`.toUpperCase();
                   const isSelected = selectedPerson === person;
                   const isOnCall = effectiveOnCallNoms.has(person.nom);
+                  const isHoliday = holidayNoms.has(person.nom);
+
+                  let rowBg = "transparent";
+                  let rowBorder = "transparent";
+                  if (isHoliday) { rowBg = "rgba(107,114,128,0.08)"; rowBorder = "rgba(107,114,128,0.3)"; }
+                  else if (isSelected) { rowBg = `${color}22`; rowBorder = color; }
+                  else if (isOnCall) { rowBg = "rgba(245,158,11,0.06)"; rowBorder = "rgba(245,158,11,0.4)"; }
+
                   return (
-                    <button
+                    <div
                       key={i}
-                      onClick={() => onPersonSelect(person)}
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all"
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all"
                       style={{
-                        background: isSelected ? `${color}22` : isOnCall ? "rgba(245,158,11,0.06)" : "transparent",
-                        border: `1px solid ${isSelected ? color : isOnCall ? "rgba(245,158,11,0.4)" : "transparent"}`,
+                        background: rowBg,
+                        border: `1px solid ${rowBorder}`,
+                        opacity: isHoliday ? 0.6 : 1,
                       }}
                     >
-                      <div
-                        className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 relative"
+                      {/* Avatar */}
+                      <button
+                        onClick={() => onPersonSelect(person)}
+                        className="flex items-center gap-2 flex-1 min-w-0 text-left"
+                      >
+                        <div
+                          className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 relative"
+                          style={{
+                            background: isHoliday ? "#6b7280" : color,
+                            boxShadow: isOnCall ? "0 0 0 2px #f59e0b" : "none",
+                          }}
+                        >
+                          {initials}
+                          {isOnCall && !isHoliday && (
+                            <span
+                              className="absolute -top-1 -right-1 w-3 h-3 rounded-full flex items-center justify-center text-black font-black"
+                              style={{ background: "#f59e0b", fontSize: "7px", border: "1.5px solid var(--color-surface)" }}
+                            >!</span>
+                          )}
+                          {isHoliday && (
+                            <span
+                              className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full flex items-center justify-center"
+                              style={{ background: "#374151", fontSize: "8px", border: "1.5px solid var(--color-surface)" }}
+                            >🌴</span>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold leading-tight truncate" style={{ color: "var(--color-text-primary)" }}>
+                            {person.prenom} {person.nom}
+                          </p>
+                          <p className="text-xs truncate" style={{ color: "var(--color-text-secondary)" }}>
+                            {person.ville}
+                          </p>
+                        </div>
+                        <span
+                          className="text-xs font-bold px-1.5 py-0.5 rounded flex-shrink-0"
+                          style={{ background: `${color}33`, color }}
+                        >
+                          {ROLE_LABELS[person.role]}
+                        </span>
+                      </button>
+
+                      {/* Astreinte toggle */}
+                      <button
+                        onClick={() => onToggleOnCall?.(person.nom)}
+                        disabled={isHoliday}
+                        title={isOnCall ? "Retirer de l'astreinte" : "Mettre en astreinte"}
+                        className="flex-shrink-0 w-7 h-7 rounded-md flex items-center justify-center transition-colors"
                         style={{
-                          background: color,
-                          boxShadow: isOnCall ? "0 0 0 2px #f59e0b" : "none",
+                          background: isOnCall ? "rgba(245,158,11,0.2)" : "var(--color-surface-elevated)",
+                          border: `1px solid ${isOnCall ? "#f59e0b" : "var(--color-border)"}`,
+                          color: isOnCall ? "#f59e0b" : "var(--color-text-secondary)",
+                          opacity: isHoliday ? 0.3 : 1,
+                          cursor: isHoliday ? "not-allowed" : "pointer",
                         }}
                       >
-                        {initials}
-                        {isOnCall && (
-                          <span
-                            className="absolute -top-1 -right-1 w-3 h-3 rounded-full flex items-center justify-center text-black font-black"
-                            style={{ background: "#f59e0b", fontSize: "7px", border: "1.5px solid var(--color-surface)" }}
-                          >!</span>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p
-                          className="text-sm font-semibold leading-tight truncate"
-                          style={{ color: "var(--color-text-primary)" }}
-                        >
-                          {person.prenom} {person.nom}
-                        </p>
-                        <p className="text-xs truncate" style={{ color: "var(--color-text-secondary)" }}>
-                          {person.ville}
-                        </p>
-                      </div>
-                      <span
-                        className="text-xs font-bold px-1.5 py-0.5 rounded flex-shrink-0"
-                        style={{ background: `${color}33`, color }}
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill={isOnCall ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M18 8h1a4 4 0 0 1 0 8h-1" />
+                          <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" />
+                          <line x1="6" y1="1" x2="6" y2="4" />
+                          <line x1="10" y1="1" x2="10" y2="4" />
+                          <line x1="14" y1="1" x2="14" y2="4" />
+                        </svg>
+                      </button>
+
+                      {/* Vacances toggle */}
+                      <button
+                        onClick={() => onToggleHoliday?.(person.nom)}
+                        title={isHoliday ? "Retirer les vacances" : "Marquer en vacances"}
+                        className="flex-shrink-0 w-7 h-7 rounded-md flex items-center justify-center transition-colors text-sm"
+                        style={{
+                          background: isHoliday ? "rgba(107,114,128,0.25)" : "var(--color-surface-elevated)",
+                          border: `1px solid ${isHoliday ? "#9ca3af" : "var(--color-border)"}`,
+                          color: isHoliday ? "#d1d5db" : "var(--color-text-secondary)",
+                        }}
                       >
-                        {person.role}
-                      </span>
-                    </button>
+                        🌴
+                      </button>
+                    </div>
                   );
                 })}
               </div>

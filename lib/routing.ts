@@ -57,14 +57,18 @@ export async function computeRouteResults(
   incidentLat: number,
   incidentLng: number,
   onCallNoms: Set<string>,
+  holidayNoms: Set<string> = new Set(),
   maxDurationMin = 60
 ): Promise<RouteResult[]> {
   const results: RouteResult[] = [];
 
+  // Persons on holiday are completely excluded from routing
+  const eligible = PEOPLE.filter((p) => !holidayNoms.has(p.nom));
+
   // Process in batches of 5 to be polite to the free OSRM API
   const batchSize = 5;
-  for (let i = 0; i < PEOPLE.length; i += batchSize) {
-    const batch = PEOPLE.slice(i, i + batchSize);
+  for (let i = 0; i < eligible.length; i += batchSize) {
+    const batch = eligible.slice(i, i + batchSize);
     const settled = await Promise.allSettled(
       batch.map((person) =>
         fetchRoute(person.lat, person.lng, incidentLat, incidentLng).then(
@@ -90,7 +94,7 @@ export async function computeRouteResults(
     }
 
     // Small pause between batches
-    if (i + batchSize < PEOPLE.length) {
+    if (i + batchSize < eligible.length) {
       await new Promise((r) => setTimeout(r, 150));
     }
   }

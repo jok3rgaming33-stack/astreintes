@@ -36,11 +36,13 @@ export default function Home() {
   const [incidents, setIncidents] = useState<NetworkIncident[]>([]);
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
 
-  // On-call schedule — refreshed at midnight automatically
+  // On-call schedule — seeded from the planning, but manually overrideable
   const [onCallNoms, setOnCallNoms] = useState<Set<string>>(() => getOnCallNoms(new Date()));
+  // Persons flagged as on holiday — excluded from routing calculations
+  const [holidayNoms, setHolidayNoms] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    // Compute ms until next midnight, then refresh the on-call set
+    // Refresh the on-call seed at midnight (manual overrides are reset)
     function scheduleRefresh() {
       const now = new Date();
       const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
@@ -52,6 +54,33 @@ export default function Home() {
     }
     const t = scheduleRefresh();
     return () => clearTimeout(t);
+  }, []);
+
+  const handleToggleOnCall = useCallback((nom: string) => {
+    setOnCallNoms((prev) => {
+      const next = new Set(prev);
+      if (next.has(nom)) next.delete(nom);
+      else next.add(nom);
+      return next;
+    });
+  }, []);
+
+  const handleToggleHoliday = useCallback((nom: string) => {
+    setHolidayNoms((prev) => {
+      const next = new Set(prev);
+      if (next.has(nom)) {
+        next.delete(nom);
+      } else {
+        next.add(nom);
+        // If person goes on holiday, remove them from on-call too
+        setOnCallNoms((prevOC) => {
+          const nextOC = new Set(prevOC);
+          nextOC.delete(nom);
+          return nextOC;
+        });
+      }
+      return next;
+    });
   }, []);
 
   const handleToggleRole = useCallback((role: Role) => {
@@ -83,7 +112,8 @@ export default function Home() {
         const results = await computeRouteResults(
           incident.lat,
           incident.lng,
-          onCallNoms
+          onCallNoms,
+          holidayNoms
         );
         setRouteResults(results);
       } finally {
@@ -122,6 +152,9 @@ export default function Home() {
           onAddIncident={handleAddIncident}
           onRemoveIncident={handleRemoveIncident}
           onCallNoms={onCallNoms}
+          holidayNoms={holidayNoms}
+          onToggleOnCall={handleToggleOnCall}
+          onToggleHoliday={handleToggleHoliday}
         />
       </div>
 
@@ -135,6 +168,7 @@ export default function Home() {
           incidents={incidents}
           onCallNoms={onCallNoms}
           routeResultPersons={new Set(routeResults.filter((r) => !r.isOnCall).map((r) => r.person.nom))}
+          holidayNoms={holidayNoms}
         />
 
         {selectedPerson && (
@@ -231,6 +265,9 @@ export default function Home() {
                 onAddIncident={handleAddIncident}
                 onRemoveIncident={handleRemoveIncident}
                 onCallNoms={onCallNoms}
+                holidayNoms={holidayNoms}
+                onToggleOnCall={handleToggleOnCall}
+                onToggleHoliday={handleToggleHoliday}
                 mobileSheet
               />
             </div>

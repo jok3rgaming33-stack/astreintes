@@ -9,22 +9,28 @@ import type { NetworkIncident } from "@/components/AddressSearch";
 
 /**
  * Build a Leaflet divIcon for a person marker.
- * - On-call: gold ring (#f59e0b) + ! badge
- * - In route results (proximity): cyan ring (#06b6d4) + clock badge
- * - Normal: no ring
+ * - On holiday: grey + palm-tree badge, reduced opacity
+ * - On-call:    gold ring (#f59e0b) + ! badge
+ * - Proximity:  cyan ring (#06b6d4) + clock badge
+ * - Normal:     role colour, no ring
  */
 function buildPersonIcon(
   person: Person,
   isOnCall: boolean,
-  isProximity = false
+  isProximity = false,
+  isHoliday = false
 ): L.DivIcon {
   const initials = `${person.prenom[0]}${person.nom[0]}`.toUpperCase();
-  const color = ROLE_COLORS[person.role];
+  const color = isHoliday ? "#6b7280" : ROLE_COLORS[person.role];
 
   let ring = "";
   let badge = "";
+  let extra = "";
 
-  if (isOnCall) {
+  if (isHoliday) {
+    extra = "opacity:0.45;";
+    badge = `<span style="position:absolute;top:-5px;right:-5px;width:13px;height:13px;border-radius:50%;background:#374151;border:2px solid #111827;display:flex;align-items:center;justify-content:center;font-size:8px;line-height:1;">🌴</span>`;
+  } else if (isOnCall) {
     ring = `box-shadow:0 0 0 3px #f59e0b,0 0 10px 4px rgba(245,158,11,0.55);`;
     badge = `<span style="position:absolute;top:-5px;right:-5px;width:12px;height:12px;border-radius:50%;background:#f59e0b;border:2px solid #111827;display:flex;align-items:center;justify-content:center;font-size:7px;color:#111827;font-weight:900;">!</span>`;
   } else if (isProximity) {
@@ -34,7 +40,7 @@ function buildPersonIcon(
 
   return L.divIcon({
     className: "",
-    html: `<div class="person-marker" style="background-color:${color};position:relative;${ring}">${initials}${badge}</div>`,
+    html: `<div class="person-marker" style="background-color:${color};position:relative;${ring}${extra}">${initials}${badge}</div>`,
     iconSize: [34, 34],
     iconAnchor: [17, 17],
     popupAnchor: [0, -20],
@@ -59,6 +65,8 @@ interface MapComponentProps {
   onCallNoms: Set<string>;
   /** Persons from route-result calculation — shown with a cyan ring on the map */
   routeResultPersons?: Set<string>;
+  /** Persons flagged as on holiday — shown greyed out on the map */
+  holidayNoms?: Set<string>;
 }
 
 export default function MapComponent({
@@ -69,6 +77,7 @@ export default function MapComponent({
   incidents,
   onCallNoms,
   routeResultPersons = new Set(),
+  holidayNoms = new Set(),
 }: MapComponentProps) {
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<Map<Person, L.Marker>>(new Map());
@@ -185,14 +194,15 @@ export default function MapComponent({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Refresh marker icons when on-call set or proximity set changes
+  // Refresh marker icons when on-call, proximity or holiday sets change
   useEffect(() => {
     markersRef.current.forEach((marker, person) => {
-      const isOnCall = onCallNoms.has(person.nom);
-      const isProximity = !isOnCall && routeResultPersons.has(person.nom);
-      marker.setIcon(buildPersonIcon(person, isOnCall, isProximity));
+      const isHoliday = holidayNoms.has(person.nom);
+      const isOnCall = !isHoliday && onCallNoms.has(person.nom);
+      const isProximity = !isHoliday && !isOnCall && routeResultPersons.has(person.nom);
+      marker.setIcon(buildPersonIcon(person, isOnCall, isProximity, isHoliday));
     });
-  }, [onCallNoms, routeResultPersons]);
+  }, [onCallNoms, routeResultPersons, holidayNoms]);
 
   // Update marker visibility based on active roles & search
   useEffect(() => {
