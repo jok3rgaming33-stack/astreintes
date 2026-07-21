@@ -7,17 +7,30 @@ import { PEOPLE, ROLE_COLORS, type Person, type Role } from "@/lib/people";
 import { getOnCallNoms } from "@/lib/schedule";
 import type { NetworkIncident } from "@/components/AddressSearch";
 
-/** Build a Leaflet divIcon for a person marker. On-call persons get a gold ring. */
-function buildPersonIcon(person: Person, isOnCall: boolean): L.DivIcon {
+/**
+ * Build a Leaflet divIcon for a person marker.
+ * - On-call: gold ring (#f59e0b) + ! badge
+ * - In route results (proximity): cyan ring (#06b6d4) + clock badge
+ * - Normal: no ring
+ */
+function buildPersonIcon(
+  person: Person,
+  isOnCall: boolean,
+  isProximity = false
+): L.DivIcon {
   const initials = `${person.prenom[0]}${person.nom[0]}`.toUpperCase();
   const color = ROLE_COLORS[person.role];
 
-  const ring = isOnCall
-    ? `box-shadow:0 0 0 3px #f59e0b,0 0 10px 4px rgba(245,158,11,0.55);`
-    : "";
-  const badge = isOnCall
-    ? `<span style="position:absolute;top:-5px;right:-5px;width:12px;height:12px;border-radius:50%;background:#f59e0b;border:2px solid #111827;display:flex;align-items:center;justify-content:center;font-size:7px;color:#111827;font-weight:900;">!</span>`
-    : "";
+  let ring = "";
+  let badge = "";
+
+  if (isOnCall) {
+    ring = `box-shadow:0 0 0 3px #f59e0b,0 0 10px 4px rgba(245,158,11,0.55);`;
+    badge = `<span style="position:absolute;top:-5px;right:-5px;width:12px;height:12px;border-radius:50%;background:#f59e0b;border:2px solid #111827;display:flex;align-items:center;justify-content:center;font-size:7px;color:#111827;font-weight:900;">!</span>`;
+  } else if (isProximity) {
+    ring = `box-shadow:0 0 0 3px #06b6d4,0 0 8px 3px rgba(6,182,212,0.45);`;
+    badge = `<span style="position:absolute;top:-5px;right:-5px;width:12px;height:12px;border-radius:50%;background:#06b6d4;border:2px solid #111827;display:flex;align-items:center;justify-content:center;font-size:8px;color:#111827;font-weight:900;">⏱</span>`;
+  }
 
   return L.divIcon({
     className: "",
@@ -44,6 +57,8 @@ interface MapComponentProps {
   selectedPerson: Person | null;
   incidents: NetworkIncident[];
   onCallNoms: Set<string>;
+  /** Persons from route-result calculation — shown with a cyan ring on the map */
+  routeResultPersons?: Set<string>;
 }
 
 export default function MapComponent({
@@ -53,6 +68,7 @@ export default function MapComponent({
   selectedPerson,
   incidents,
   onCallNoms,
+  routeResultPersons = new Set(),
 }: MapComponentProps) {
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<Map<Person, L.Marker>>(new Map());
@@ -169,13 +185,14 @@ export default function MapComponent({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Refresh marker icons when on-call set changes (daily)
+  // Refresh marker icons when on-call set or proximity set changes
   useEffect(() => {
     markersRef.current.forEach((marker, person) => {
       const isOnCall = onCallNoms.has(person.nom);
-      marker.setIcon(buildPersonIcon(person, isOnCall));
+      const isProximity = !isOnCall && routeResultPersons.has(person.nom);
+      marker.setIcon(buildPersonIcon(person, isOnCall, isProximity));
     });
-  }, [onCallNoms]);
+  }, [onCallNoms, routeResultPersons]);
 
   // Update marker visibility based on active roles & search
   useEffect(() => {
@@ -188,9 +205,10 @@ export default function MapComponent({
       const marker = markersRef.current.get(person);
       if (!marker) return;
 
-      // On-call persons stay visible regardless of role filter
+      // On-call and proximity persons stay visible regardless of role filter
       const isOnCall = onCallNoms.has(person.nom);
-      const matchesRole = activeRoles.has(person.role) || isOnCall;
+      const isProximity = routeResultPersons.has(person.nom);
+      const matchesRole = activeRoles.has(person.role) || isOnCall || isProximity;
       const matchesSearch =
         q === "" ||
         person.nom.toLowerCase().includes(q) ||
@@ -203,7 +221,7 @@ export default function MapComponent({
         if (map.hasLayer(marker)) marker.removeFrom(map);
       }
     });
-  }, [activeRoles, searchQuery, onCallNoms]);
+  }, [activeRoles, searchQuery, onCallNoms, routeResultPersons]);
 
   // Fly to selected person
   useEffect(() => {

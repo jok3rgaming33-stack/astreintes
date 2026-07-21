@@ -134,6 +134,7 @@ export default function Home() {
           selectedPerson={selectedPerson}
           incidents={incidents}
           onCallNoms={onCallNoms}
+          routeResultPersons={new Set(routeResults.filter((r) => !r.isOnCall).map((r) => r.person.nom))}
         />
 
         {selectedPerson && (

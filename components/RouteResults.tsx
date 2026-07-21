@@ -1,6 +1,6 @@
 "use client";
 
-import { ROLE_COLORS } from "@/lib/people";
+import { ROLE_COLORS, ROLE_LABELS } from "@/lib/people";
 import type { RouteResult } from "@/lib/routing";
 import type { NetworkIncident } from "@/components/AddressSearch";
 
@@ -140,11 +140,25 @@ function PersonRow({ result }: { result: RouteResult }) {
         {initials}
       </div>
 
-      {/* Name + city */}
+      {/* Name + city + role */}
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-semibold leading-tight truncate" style={{ color: "var(--color-text-primary)" }}>
-          {person.prenom} {person.nom}
-        </p>
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <p className="text-xs font-semibold leading-tight truncate" style={{ color: "var(--color-text-primary)" }}>
+            {person.prenom} {person.nom}
+          </p>
+          <span
+            className="text-xs font-bold px-1 py-0 rounded flex-shrink-0"
+            style={{
+              background: `${color}22`,
+              color: color,
+              fontSize: "10px",
+              lineHeight: "16px",
+              border: `1px solid ${color}55`,
+            }}
+          >
+            {ROLE_LABELS[person.role]}
+          </span>
+        </div>
         <p className="text-xs truncate" style={{ color: "var(--color-text-secondary)" }}>
           {person.ville}
         </p>
