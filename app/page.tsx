@@ -16,6 +16,12 @@ import {
   getPersonStatuses,
   upsertPersonStatus,
 } from "@/app/actions/shared-state";
+import NotificationBanner from "@/components/NotificationBanner";
+import {
+  sendNotification,
+  buildIncidentNotifBody,
+} from "@/lib/notifications";
+import { PEOPLE } from "@/lib/people";
 
 const MapComponent = dynamic(() => import("@/components/MapComponent"), {
   ssr: false,
@@ -66,6 +72,22 @@ export default function Home() {
         const toAdd = dbIncidents
           .filter((d) => !prevIds.has(d.id))
           .map((d) => ({ id: d.id, label: d.label, lat: d.lat, lng: d.lng }));
+
+        // Fire a notification for remote incidents (placed by other users)
+        toAdd
+          .filter((inc) => !localIncidentIdsRef.current.has(inc.id))
+          .forEach((inc) => {
+            const { title, body } = buildIncidentNotifBody({
+              label: inc.label,
+              onCallNames: [],
+              proximityNames: [],
+            });
+            sendNotification(title, {
+              body: "Panne signalée par un autre utilisateur. Ouvrez la carte pour les détails.",
+              tag: inc.id,
+            });
+          });
+
         // Remove any that were deleted by another user
         const dbIds = new Set(dbIncidents.map((d) => d.id));
         const kept = prev.filter((p) => dbIds.has(p.id));
@@ -187,6 +209,21 @@ export default function Home() {
           holidayNoms
         );
         setRouteResults(results);
+
+        // --- Notification ---
+        // Target: on-call + CIR + REF + proximity (≤1h)
+        const onCallNames = PEOPLE
+          .filter((p) => onCallNoms.has(p.nom))
+          .map((p) => `${p.prenom} ${p.nom}`);
+        const proximityNames = results
+          .filter((r) => !r.isOnCall)
+          .map((r) => `${r.person.prenom} ${r.person.nom}`);
+        const { title, body } = buildIncidentNotifBody({
+          label: incident.label,
+          onCallNames,
+          proximityNames,
+        });
+        sendNotification(title, { body, tag: incident.id });
       } finally {
         setRouteLoading(false);
       }
@@ -259,6 +296,8 @@ export default function Home() {
   );
 
   return (
+    <>
+    <NotificationBanner />
     <main className="flex w-full overflow-hidden" style={{ height: "100dvh" }}>
 
       {/* Desktop sidebar */}
@@ -447,5 +486,6 @@ export default function Home() {
         </div>
       )}
     </main>
+    </>
   );
 }
