@@ -1,0 +1,80 @@
+@import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
+
+@theme inline {
+  --color-background: #0f172a;
+  --color-surface: #1e293b;
+  --color-surface-elevated: #273549;
+  --color-border: #334155;
+  --color-text-primary: #f1f5f9;
+  --color-text-secondary: #94a3b8;
+  --color-accent: #38bdf8;
+
+  --color-role-cir: #3b82f6;
+  --color-role-ref: #22c55e;
+  --color-role-tmf: #f97316;
+  --color-role-tmra: #ef4444;
+  --color-role-tmre: #a855f7;
+
+  --font-sans: "Inter", "Inter Fallback", sans-serif;
+}
+
+html, body {
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  height: 100%;
+  margin: 0;
+}
+
+/* Leaflet popup overrides */
+.leaflet-popup-content-wrapper {
+  background-color: #1e293b !important;
+  color: #f1f5f9 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5) !important;
+}
+
+.leaflet-popup-tip {
+  background-color: #1e293b !important;
+}
+
+.leaflet-popup-content {
+  margin: 14px 18px !important;
+  line-height: 1.5 !important;
+}
+
+.leaflet-popup-close-button {
+  color: #94a3b8 !important;
+  font-size: 18px !important;
+}
+
+.leaflet-popup-close-button:hover {
+  color: #f1f5f9 !important;
+}
+
+/* Custom person marker */
+.person-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 2.5px solid white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.45);
+  font-weight: 700;
+  font-size: 11px;
+  color: white;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  font-family: var(--font-sans);
+  letter-spacing: 0.01em;
+  width: 34px;
+  height: 34px;
+}
+
+.person-marker:hover {
+  transform: scale(1.25);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+  z-index: 9999 !important;
+}
