@@ -3,8 +3,30 @@
 import { useEffect, useRef } from "react";
 import L from "leaflet";
 
-import { PEOPLE, ROLE_COLORS, ROLE_LABELS, type Person, type Role } from "@/lib/people";
+import { PEOPLE, ROLE_COLORS, type Person, type Role } from "@/lib/people";
+import { getOnCallNoms } from "@/lib/schedule";
 import type { NetworkIncident } from "@/components/AddressSearch";
+
+/** Build a Leaflet divIcon for a person marker. On-call persons get a gold ring. */
+function buildPersonIcon(person: Person, isOnCall: boolean): L.DivIcon {
+  const initials = `${person.prenom[0]}${person.nom[0]}`.toUpperCase();
+  const color = ROLE_COLORS[person.role];
+
+  const ring = isOnCall
+    ? `box-shadow:0 0 0 3px #f59e0b,0 0 10px 4px rgba(245,158,11,0.55);`
+    : "";
+  const badge = isOnCall
+    ? `<span style="position:absolute;top:-5px;right:-5px;width:12px;height:12px;border-radius:50%;background:#f59e0b;border:2px solid #111827;display:flex;align-items:center;justify-content:center;font-size:7px;color:#111827;font-weight:900;">!</span>`
+    : "";
+
+  return L.divIcon({
+    className: "",
+    html: `<div class="person-marker" style="background-color:${color};position:relative;${ring}">${initials}${badge}</div>`,
+    iconSize: [34, 34],
+    iconAnchor: [17, 17],
+    popupAnchor: [0, -20],
+  });
+}
 
 // Department codes for Nouvelle-Aquitaine region highlighted on the map.
 // 40 (Landes), 47 (Lot-et-Garonne) and 64 (Pyrénées-Atlantiques) are excluded
@@ -21,6 +43,7 @@ interface MapComponentProps {
   onPersonSelect: (person: Person | null) => void;
   selectedPerson: Person | null;
   incidents: NetworkIncident[];
+  onCallNoms: Set<string>;
 }
 
 export default function MapComponent({
@@ -29,6 +52,7 @@ export default function MapComponent({
   onPersonSelect,
   selectedPerson,
   incidents,
+  onCallNoms,
 }: MapComponentProps) {
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<Map<Person, L.Marker>>(new Map());
@@ -126,23 +150,12 @@ export default function MapComponent({
         // Map still works without boundaries
       });
 
-    // Create markers for all people
+    // Create markers for all people (initial render — no on-call highlight yet)
     PEOPLE.forEach((person) => {
-      const initials = `${person.prenom[0]}${person.nom[0]}`.toUpperCase();
-      const color = ROLE_COLORS[person.role];
-
-      const icon = L.divIcon({
-        className: "",
-        html: `<div class="person-marker" style="background-color:${color};">${initials}</div>`,
-        iconSize: [34, 34],
-        iconAnchor: [17, 17],
-        popupAnchor: [0, -20],
-      });
-
+      const icon = buildPersonIcon(person, false);
       const marker = L.marker([person.lat, person.lng], { icon })
         .addTo(map)
         .on("click", () => onPersonSelect(person));
-
       markersRef.current.set(person, marker);
     });
 
@@ -155,6 +168,14 @@ export default function MapComponent({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Refresh marker icons when on-call set changes (daily)
+  useEffect(() => {
+    markersRef.current.forEach((marker, person) => {
+      const isOnCall = onCallNoms.has(person.nom);
+      marker.setIcon(buildPersonIcon(person, isOnCall));
+    });
+  }, [onCallNoms]);
 
   // Update marker visibility based on active roles & search
   useEffect(() => {

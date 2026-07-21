@@ -1,11 +1,12 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import PersonCard from "@/components/PersonCard";
 import { type Person, type Role } from "@/lib/people";
 import { type NetworkIncident } from "@/components/AddressSearch";
+import { getOnCallNoms } from "@/lib/schedule";
 
 const MapComponent = dynamic(() => import("@/components/MapComponent"), {
   ssr: false,
@@ -32,6 +33,24 @@ export default function Home() {
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
   const [incidents, setIncidents] = useState<NetworkIncident[]>([]);
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
+
+  // On-call schedule — refreshed at midnight automatically
+  const [onCallNoms, setOnCallNoms] = useState<Set<string>>(() => getOnCallNoms(new Date()));
+
+  useEffect(() => {
+    // Compute ms until next midnight, then refresh the on-call set
+    function scheduleRefresh() {
+      const now = new Date();
+      const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+      const msUntilMidnight = tomorrow.getTime() - now.getTime();
+      return setTimeout(() => {
+        setOnCallNoms(getOnCallNoms(new Date()));
+        scheduleRefresh();
+      }, msUntilMidnight);
+    }
+    const t = scheduleRefresh();
+    return () => clearTimeout(t);
+  }, []);
 
   const handleToggleRole = useCallback((role: Role) => {
     setActiveRoles((prev) => {
@@ -70,6 +89,7 @@ export default function Home() {
           incidents={incidents}
           onAddIncident={handleAddIncident}
           onRemoveIncident={handleRemoveIncident}
+          onCallNoms={onCallNoms}
         />
       </div>
 
@@ -81,6 +101,7 @@ export default function Home() {
           onPersonSelect={handlePersonSelect}
           selectedPerson={selectedPerson}
           incidents={incidents}
+          onCallNoms={onCallNoms}
         />
 
         {selectedPerson && (
@@ -164,6 +185,7 @@ export default function Home() {
                 incidents={incidents}
                 onAddIncident={handleAddIncident}
                 onRemoveIncident={handleRemoveIncident}
+                onCallNoms={onCallNoms}
                 mobileSheet
               />
             </div>

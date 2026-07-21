@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { PEOPLE, ROLE_COLORS, ROLE_LABELS, type Person, type Role } from "@/lib/people";
+import { getOnCallNoms } from "@/lib/schedule";
 import AddressSearch, { type NetworkIncident } from "@/components/AddressSearch";
 
 const ALL_ROLES: Role[] = ["CIR", "REF", "TMF", "TMRa", "TMRe"];
@@ -18,6 +19,8 @@ interface SidebarProps {
   onRemoveIncident: (id: string) => void;
   /** When true, disables the collapse button and fills the parent width (used in mobile sheet) */
   mobileSheet?: boolean;
+  /** Set of person noms currently on-call — shown as a banner and highlighted in the list */
+  onCallNoms?: Set<string>;
 }
 
 export default function Sidebar({
@@ -31,8 +34,15 @@ export default function Sidebar({
   onAddIncident,
   onRemoveIncident,
   mobileSheet = false,
+  onCallNoms,
 }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
+
+  // Fall back to computing locally if not provided (e.g. storybook / tests)
+  const effectiveOnCallNoms = useMemo(
+    () => onCallNoms ?? getOnCallNoms(new Date()),
+    [onCallNoms]
+  );
 
   const filteredPeople = useMemo(() => {
     const q = searchQuery.toLowerCase();
@@ -133,6 +143,48 @@ export default function Sidebar({
             </div>
           </div>
 
+          {/* On-call banner */}
+          {effectiveOnCallNoms.size > 0 && (
+            <div className="px-4 py-3" style={{ borderBottom: "1px solid var(--color-border)", background: "rgba(245,158,11,0.07)" }}>
+              <p className="text-xs font-semibold uppercase tracking-wider mb-2 flex items-center gap-1.5" style={{ color: "#f59e0b" }}>
+                <span
+                  className="inline-block w-2 h-2 rounded-full animate-pulse"
+                  style={{ background: "#f59e0b" }}
+                />
+                En astreinte aujourd&apos;hui
+              </p>
+              <div className="flex flex-col gap-1">
+                {PEOPLE.filter((p) => effectiveOnCallNoms.has(p.nom)).map((p) => {
+                  const color = ROLE_COLORS[p.role];
+                  const initials = `${p.prenom[0]}${p.nom[0]}`.toUpperCase();
+                  return (
+                    <button
+                      key={`${p.nom}-${p.prenom}`}
+                      onClick={() => onPersonSelect(p)}
+                      className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-left transition-colors hover:bg-white/5"
+                      style={{ border: "1px solid rgba(245,158,11,0.3)" }}
+                    >
+                      <div
+                        className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+                        style={{ background: color, boxShadow: "0 0 0 2px #f59e0b" }}
+                      >
+                        {initials}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold leading-tight truncate" style={{ color: "var(--color-text-primary)" }}>
+                          {p.prenom} {p.nom}
+                        </p>
+                        <p className="text-xs truncate" style={{ color: "#f59e0b", opacity: 0.8 }}>
+                          {p.ville}
+                        </p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Role filters */}
           <div className="px-4 py-3" style={{ borderBottom: "1px solid var(--color-border)" }}>
             <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--color-text-secondary)" }}>
@@ -230,21 +282,31 @@ export default function Sidebar({
                   const color = ROLE_COLORS[person.role];
                   const initials = `${person.prenom[0]}${person.nom[0]}`.toUpperCase();
                   const isSelected = selectedPerson === person;
+                  const isOnCall = effectiveOnCallNoms.has(person.nom);
                   return (
                     <button
                       key={i}
                       onClick={() => onPersonSelect(person)}
                       className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all"
                       style={{
-                        background: isSelected ? `${color}22` : "transparent",
-                        border: `1px solid ${isSelected ? color : "transparent"}`,
+                        background: isSelected ? `${color}22` : isOnCall ? "rgba(245,158,11,0.06)" : "transparent",
+                        border: `1px solid ${isSelected ? color : isOnCall ? "rgba(245,158,11,0.4)" : "transparent"}`,
                       }}
                     >
                       <div
-                        className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
-                        style={{ background: color }}
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 relative"
+                        style={{
+                          background: color,
+                          boxShadow: isOnCall ? "0 0 0 2px #f59e0b" : "none",
+                        }}
                       >
                         {initials}
+                        {isOnCall && (
+                          <span
+                            className="absolute -top-1 -right-1 w-3 h-3 rounded-full flex items-center justify-center text-black font-black"
+                            style={{ background: "#f59e0b", fontSize: "7px", border: "1.5px solid var(--color-surface)" }}
+                          >!</span>
+                        )}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p
