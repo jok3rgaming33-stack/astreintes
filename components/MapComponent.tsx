@@ -62,46 +62,58 @@ export default function MapComponent({
       .then((geojson) => {
         if (!mapRef.current) return;
 
-        // Draw individual department boundaries (thin blue)
+        // ── Layer 1: thin blue outline on every department ─────────────────
         const deptLayer = L.geoJSON(geojson, {
-          style: (feature) => {
-            const code: string = feature?.properties?.code ?? "";
-            const isNA = NOUVELLE_AQUITAINE_DEPTS.has(code);
-            return {
-              color: isNA ? "#5b5fc7" : "#6b7280",
-              weight: isNA ? 1.5 : 0.8,
-              opacity: isNA ? 0.9 : 0.4,
-              fillColor: isNA ? "#5b5fc7" : "transparent",
-              fillOpacity: isNA ? 0.04 : 0,
-              interactive: false,
-            };
-          },
+          style: () => ({
+            color: "#4b6cb7",      // blue outline for all depts
+            weight: 1,
+            opacity: 0.6,
+            fillOpacity: 0,
+            interactive: false,
+          }),
         });
         deptLayer.addTo(mapRef.current);
         geoLayersRef.current.push(deptLayer);
 
-        // Build a merged polygon for Nouvelle-Aquitaine region outline (thick border)
-        const naFeatures = geojson.features.filter(
+        // ── Layer 2: light-blue fill + stronger blue border inside NA ──────
+        const naFeatures: unknown[] = geojson.features.filter(
           (f: { properties: { code: string } }) =>
             NOUVELLE_AQUITAINE_DEPTS.has(f.properties.code)
         );
         if (naFeatures.length > 0) {
-          const regionLayer = L.geoJSON(
+          const naFillLayer = L.geoJSON(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             { type: "FeatureCollection", features: naFeatures } as any,
             {
               style: {
-                color: "#7c3aed",
-                weight: 3,
-                opacity: 1,
-                fillOpacity: 0,
+                color: "#4b6cb7",
+                weight: 1.5,
+                opacity: 0.85,
+                fillColor: "#4b6cb7",
+                fillOpacity: 0.07,
                 interactive: false,
-                dashArray: undefined,
               },
             }
           );
-          regionLayer.addTo(mapRef.current);
-          geoLayersRef.current.push(regionLayer);
+          naFillLayer.addTo(mapRef.current);
+          geoLayersRef.current.push(naFillLayer);
+
+          // ── Layer 3: thick violet outline on the outer edge of NA region ──
+          const regionOutline = L.geoJSON(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            { type: "FeatureCollection", features: naFeatures } as any,
+            {
+              style: {
+                color: "#7c3aed",  // violet
+                weight: 4,
+                opacity: 1,
+                fillOpacity: 0,
+                interactive: false,
+              },
+            }
+          );
+          regionOutline.addTo(mapRef.current);
+          geoLayersRef.current.push(regionOutline);
         }
       })
       .catch(() => {
