@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import Sidebar from "@/components/Sidebar";
 import PersonCard from "@/components/PersonCard";
 import RouteResults from "@/components/RouteResults";
@@ -9,6 +9,13 @@ import { type Person, type Role } from "@/lib/people";
 import { type NetworkIncident } from "@/components/AddressSearch";
 import { getOnCallNoms } from "@/lib/schedule";
 import { computeRouteResults, type RouteResult } from "@/lib/routing";
+import {
+  getIncidents,
+  addIncident,
+  removeIncident,
+  getPersonStatuses,
+  upsertPersonStatus,
+} from "@/app/actions/shared-state";
 
 const MapComponent = dynamic(() => import("@/components/MapComponent"), {
   ssr: false,
@@ -28,6 +35,7 @@ const MapComponent = dynamic(() => import("@/components/MapComponent"), {
 });
 
 const ALL_ROLES: Role[] = ["CIR", "REF", "TMF", "TMRa", "TMRe"];
+const POLL_INTERVAL_MS = 5000;
 
 export default function Home() {
   const [activeRoles, setActiveRoles] = useState<Set<Role>>(new Set(ALL_ROLES));
@@ -36,48 +44,108 @@ export default function Home() {
   const [incidents, setIncidents] = useState<NetworkIncident[]>([]);
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
 
-  // On-call schedule — seeded from the planning, but manually overrideable
+  // On-call: seeded from the daily schedule, overrideable via DB
   const [onCallNoms, setOnCallNoms] = useState<Set<string>>(() => getOnCallNoms(new Date()));
-  // Persons flagged as on holiday — excluded from routing calculations
+  // Holiday flags — persist in DB
   const [holidayNoms, setHolidayNoms] = useState<Set<string>>(new Set());
 
+  // Track local incident IDs to avoid re-adding incidents we placed ourselves
+  const localIncidentIdsRef = useRef<Set<string>>(new Set());
+
+  // ── Initial load + polling ─────────────────────────────────────────────
+  const syncFromDB = useCallback(async () => {
+    try {
+      const [dbIncidents, dbStatuses] = await Promise.all([
+        getIncidents(),
+        getPersonStatuses(),
+      ]);
+
+      // Merge DB incidents — add any we don't have locally yet
+      setIncidents((prev) => {
+        const prevIds = new Set(prev.map((i) => i.id));
+        const toAdd = dbIncidents
+          .filter((d) => !prevIds.has(d.id))
+          .map((d) => ({ id: d.id, label: d.label, lat: d.lat, lng: d.lng }));
+        // Remove any that were deleted by another user
+        const dbIds = new Set(dbIncidents.map((d) => d.id));
+        const kept = prev.filter((p) => dbIds.has(p.id));
+        return toAdd.length > 0 || kept.length !== prev.length
+          ? [...kept, ...toAdd]
+          : prev;
+      });
+
+      // Rebuild on-call and holiday sets from DB overrides
+      const baseOnCall = getOnCallNoms(new Date());
+      const nextOnCall = new Set(baseOnCall);
+      const nextHoliday = new Set<string>();
+
+      for (const s of dbStatuses) {
+        if (s.isHoliday) {
+          nextHoliday.add(s.nom);
+          nextOnCall.delete(s.nom); // holiday overrides on-call
+        } else if (s.isOnCall) {
+          nextOnCall.add(s.nom);
+        } else {
+          // Explicitly set to false — remove from base on-call if present
+          nextOnCall.delete(s.nom);
+        }
+      }
+
+      setOnCallNoms(nextOnCall);
+      setHolidayNoms(nextHoliday);
+    } catch {
+      // Silently fail — map still works offline
+    }
+  }, []);
+
   useEffect(() => {
-    // Refresh the on-call seed at midnight (manual overrides are reset)
+    syncFromDB();
+    const interval = setInterval(syncFromDB, POLL_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [syncFromDB]);
+
+  // Auto-refresh on-call seed at midnight
+  useEffect(() => {
     function scheduleRefresh() {
       const now = new Date();
       const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
       const msUntilMidnight = tomorrow.getTime() - now.getTime();
       return setTimeout(() => {
-        setOnCallNoms(getOnCallNoms(new Date()));
+        syncFromDB();
         scheduleRefresh();
       }, msUntilMidnight);
     }
     const t = scheduleRefresh();
     return () => clearTimeout(t);
-  }, []);
+  }, [syncFromDB]);
 
-  const handleToggleOnCall = useCallback((nom: string) => {
+  // ── Handlers ───────────────────────────────────────────────────────────
+
+  const handleToggleOnCall = useCallback(async (nom: string) => {
     setOnCallNoms((prev) => {
       const next = new Set(prev);
-      if (next.has(nom)) next.delete(nom);
-      else next.add(nom);
+      const nowOnCall = !prev.has(nom);
+      if (nowOnCall) next.add(nom); else next.delete(nom);
+      upsertPersonStatus(nom, { isOnCall: nowOnCall }).catch(() => {});
       return next;
     });
   }, []);
 
-  const handleToggleHoliday = useCallback((nom: string) => {
+  const handleToggleHoliday = useCallback(async (nom: string) => {
     setHolidayNoms((prev) => {
       const next = new Set(prev);
-      if (next.has(nom)) {
-        next.delete(nom);
-      } else {
+      const nowHoliday = !prev.has(nom);
+      if (nowHoliday) {
         next.add(nom);
-        // If person goes on holiday, remove them from on-call too
         setOnCallNoms((prevOC) => {
           const nextOC = new Set(prevOC);
           nextOC.delete(nom);
           return nextOC;
         });
+        upsertPersonStatus(nom, { isHoliday: true, isOnCall: false }).catch(() => {});
+      } else {
+        next.delete(nom);
+        upsertPersonStatus(nom, { isHoliday: false }).catch(() => {});
       }
       return next;
     });
@@ -86,8 +154,7 @@ export default function Home() {
   const handleToggleRole = useCallback((role: Role) => {
     setActiveRoles((prev) => {
       const next = new Set(prev);
-      if (next.has(role)) next.delete(role);
-      else next.add(role);
+      if (next.has(role)) next.delete(role); else next.add(role);
       return next;
     });
   }, []);
@@ -103,11 +170,15 @@ export default function Home() {
 
   const handleAddIncident = useCallback(
     async (incident: NetworkIncident) => {
+      localIncidentIdsRef.current.add(incident.id);
       setIncidents((prev) => [...prev, incident]);
-      // Immediately show loading panel for this incident
       setActiveRouteIncident(incident);
       setRouteResults([]);
       setRouteLoading(true);
+
+      // Persist to DB for all users
+      addIncident(incident).catch(() => {});
+
       try {
         const results = await computeRouteResults(
           incident.lat,
@@ -120,13 +191,13 @@ export default function Home() {
         setRouteLoading(false);
       }
     },
-    [onCallNoms]
+    [onCallNoms, holidayNoms]
   );
 
   const handleRemoveIncident = useCallback(
     (id: string) => {
       setIncidents((prev) => prev.filter((inc) => inc.id !== id));
-      // If we're showing results for this incident, clear them
+      removeIncident(id).catch(() => {});
       if (activeRouteIncident?.id === id) {
         setActiveRouteIncident(null);
         setRouteResults([]);
@@ -136,10 +207,9 @@ export default function Home() {
   );
 
   return (
-    /* 100dvh = dynamic viewport height: shrinks when the browser chrome appears on mobile */
     <main className="flex w-full overflow-hidden" style={{ height: "100dvh" }}>
 
-      {/* ── Desktop sidebar (hidden on mobile) ── */}
+      {/* Desktop sidebar */}
       <div className="hidden md:flex h-full">
         <Sidebar
           activeRoles={activeRoles}
@@ -158,7 +228,7 @@ export default function Home() {
         />
       </div>
 
-      {/* ── Map (full screen on mobile) ── */}
+      {/* Map */}
       <div className="relative flex-1 h-full">
         <MapComponent
           activeRoles={activeRoles}
@@ -190,7 +260,7 @@ export default function Home() {
           />
         )}
 
-        {/* ── Mobile FAB — positioned above safe-area (home indicator / nav bar) ── */}
+        {/* Mobile FAB */}
         <button
           className="md:hidden absolute left-1/2 -translate-x-1/2 z-[1000] flex items-center gap-2 px-5 py-3 rounded-full text-sm font-semibold transition-all active:scale-95"
           style={{
@@ -210,16 +280,13 @@ export default function Home() {
         </button>
       </div>
 
-      {/* ── Mobile bottom-sheet overlay ── */}
+      {/* Mobile bottom-sheet */}
       {mobileSheetOpen && (
         <div
           className="md:hidden fixed inset-0 z-[2000] flex flex-col justify-end"
           onClick={(e) => { if (e.target === e.currentTarget) setMobileSheetOpen(false); }}
         >
-          {/* Backdrop */}
           <div className="absolute inset-0 bg-black/50" />
-
-          {/* Sheet — paddingBottom ensures content clears the OS navigation bar */}
           <div
             className="relative flex flex-col rounded-t-2xl overflow-hidden"
             style={{
@@ -229,7 +296,6 @@ export default function Home() {
               paddingBottom: "env(safe-area-inset-bottom, 0px)",
             }}
           >
-            {/* Drag handle + close button */}
             <div
               className="flex items-center justify-between px-4 py-3 flex-shrink-0"
               style={{ borderBottom: "1px solid var(--color-border)" }}
@@ -248,8 +314,6 @@ export default function Home() {
                 </svg>
               </button>
             </div>
-
-            {/* Sidebar content inside the sheet */}
             <div className="flex-1 overflow-y-auto">
               <Sidebar
                 activeRoles={activeRoles}
