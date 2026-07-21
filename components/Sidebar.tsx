@@ -15,6 +15,7 @@ interface SidebarProps {
   selectedPerson: Person | null;
   incidents: NetworkIncident[];
   onAddIncident: (incident: NetworkIncident) => void;
+  onRemoveIncident: (id: string) => void;
 }
 
 export default function Sidebar({
@@ -26,6 +27,7 @@ export default function Sidebar({
   selectedPerson,
   incidents,
   onAddIncident,
+  onRemoveIncident,
 }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
 
@@ -179,10 +181,10 @@ export default function Sidebar({
                 {incidents.map((inc) => (
                   <div
                     key={inc.id}
-                    className="flex items-start gap-2 px-2 py-1.5 rounded-lg"
+                    className="flex items-center gap-2 px-2 py-1.5 rounded-lg"
                     style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)" }}
                   >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 flex-shrink-0">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
                       <line x1="1" y1="1" x2="23" y2="23"/>
                       <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/>
                       <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/>
@@ -191,9 +193,20 @@ export default function Sidebar({
                       <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
                       <line x1="12" y1="20" x2="12.01" y2="20"/>
                     </svg>
-                    <span className="text-xs leading-tight truncate" style={{ color: "#ef4444" }}>
+                    <span className="text-xs leading-tight truncate flex-1" style={{ color: "#ef4444" }}>
                       {inc.label.split(",")[0]}
                     </span>
+                    <button
+                      onClick={() => onRemoveIncident(inc.id)}
+                      className="flex-shrink-0 rounded p-0.5 transition-colors hover:bg-red-500/20"
+                      title="Supprimer ce marqueur"
+                      style={{ color: "#ef4444" }}
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                      </svg>
+                    </button>
                   </div>
                 ))}
               </div>

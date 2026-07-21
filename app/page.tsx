@@ -52,6 +52,10 @@ export default function Home() {
     setIncidents((prev) => [...prev, incident]);
   }, []);
 
+  const handleRemoveIncident = useCallback((id: string) => {
+    setIncidents((prev) => prev.filter((inc) => inc.id !== id));
+  }, []);
+
   return (
     <main className="flex h-screen w-full overflow-hidden">
       <Sidebar
@@ -63,6 +67,7 @@ export default function Home() {
         selectedPerson={selectedPerson}
         incidents={incidents}
         onAddIncident={handleAddIncident}
+        onRemoveIncident={handleRemoveIncident}
       />
       <div className="relative flex-1 h-full">
         <MapComponent

@@ -5,6 +5,11 @@ import L from "leaflet";
 import { PEOPLE, ROLE_COLORS, ROLE_LABELS, type Person, type Role } from "@/lib/people";
 import type { NetworkIncident } from "@/components/AddressSearch";
 
+// Department codes for Nouvelle-Aquitaine region
+const NOUVELLE_AQUITAINE_DEPTS = new Set([
+  "16", "17", "19", "23", "24", "33", "40", "47", "64", "79", "86", "87",
+]);
+
 interface MapComponentProps {
   activeRoles: Set<Role>;
   searchQuery: string;
@@ -24,6 +29,7 @@ export default function MapComponent({
   const markersRef = useRef<Map<Person, L.Marker>>(new Map());
   const incidentMarkersRef = useRef<Map<string, L.Marker>>(new Map());
   const containerRef = useRef<HTMLDivElement>(null);
+  const geoLayersRef = useRef<L.Layer[]>([]);
 
   // Initialize map
   useEffect(() => {
@@ -46,6 +52,59 @@ export default function MapComponent({
     L.control.zoom({ position: "bottomright" }).addTo(map);
 
     mapRef.current = map;
+
+    // Load department GeoJSON and draw boundaries
+    fetch(
+      "https://france-geojson.gregoiredavid.fr/repo/departements.geojson"
+    )
+      .then((r) => r.json())
+      .then((geojson) => {
+        if (!mapRef.current) return;
+
+        // Draw individual department boundaries (thin blue)
+        const deptLayer = L.geoJSON(geojson, {
+          style: (feature) => {
+            const code: string = feature?.properties?.code ?? "";
+            const isNA = NOUVELLE_AQUITAINE_DEPTS.has(code);
+            return {
+              color: isNA ? "#5b5fc7" : "#6b7280",
+              weight: isNA ? 1.5 : 0.8,
+              opacity: isNA ? 0.9 : 0.4,
+              fillColor: isNA ? "#5b5fc7" : "transparent",
+              fillOpacity: isNA ? 0.04 : 0,
+              interactive: false,
+            };
+          },
+        });
+        deptLayer.addTo(mapRef.current);
+        geoLayersRef.current.push(deptLayer);
+
+        // Build a merged polygon for Nouvelle-Aquitaine region outline (thick border)
+        const naFeatures = geojson.features.filter(
+          (f: { properties: { code: string } }) =>
+            NOUVELLE_AQUITAINE_DEPTS.has(f.properties.code)
+        );
+        if (naFeatures.length > 0) {
+          const regionLayer = L.geoJSON(
+            { type: "FeatureCollection", features: naFeatures },
+            {
+              style: {
+                color: "#7c3aed",
+                weight: 3,
+                opacity: 1,
+                fillOpacity: 0,
+                interactive: false,
+                dashArray: undefined,
+              },
+            }
+          );
+          regionLayer.addTo(mapRef.current);
+          geoLayersRef.current.push(regionLayer);
+        }
+      })
+      .catch(() => {
+        // GeoJSON unavailable — map still works without boundaries
+      });
 
     // Create markers for all people
     PEOPLE.forEach((person) => {
@@ -71,6 +130,8 @@ export default function MapComponent({
       map.remove();
       mapRef.current = null;
       markersRef.current.clear();
+      incidentMarkersRef.current.clear();
+      geoLayersRef.current = [];
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -108,13 +169,22 @@ export default function MapComponent({
     map.flyTo([selectedPerson.lat, selectedPerson.lng], 12, { duration: 1 });
   }, [selectedPerson]);
 
-  // Sync incident markers
+  // Sync incident markers — add new ones, remove deleted ones
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
 
-    const existingIds = new Set(incidentMarkersRef.current.keys());
+    const currentIds = new Set(incidents.map((i) => i.id));
 
+    // Remove markers that were deleted
+    incidentMarkersRef.current.forEach((marker, id) => {
+      if (!currentIds.has(id)) {
+        marker.removeFrom(map);
+        incidentMarkersRef.current.delete(id);
+      }
+    });
+
+    // Add new markers
     incidents.forEach((incident) => {
       if (incidentMarkersRef.current.has(incident.id)) return;
 
@@ -147,19 +217,9 @@ export default function MapComponent({
         );
 
       incidentMarkersRef.current.set(incident.id, marker);
-      existingIds.delete(incident.id);
 
       // Fly to new incident
       map.flyTo([incident.lat, incident.lng], 14, { duration: 1 });
-    });
-
-    // Remove markers that are no longer in incidents list
-    existingIds.forEach((id) => {
-      const marker = incidentMarkersRef.current.get(id);
-      if (marker) {
-        marker.removeFrom(map);
-        incidentMarkersRef.current.delete(id);
-      }
     });
   }, [incidents]);
 
