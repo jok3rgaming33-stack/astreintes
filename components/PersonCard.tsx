@@ -13,11 +13,14 @@ export default function PersonCard({ person, onClose }: PersonCardProps) {
 
   return (
     <div
-      className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[1000] rounded-2xl shadow-2xl px-6 py-5 flex items-center gap-5 pointer-events-auto"
+      className="absolute left-1/2 -translate-x-1/2 z-[1001] rounded-2xl shadow-2xl px-6 py-5 flex items-center gap-5 pointer-events-auto"
       style={{
+        /* On mobile the FAB is ~48px tall + 1.5rem bottom + safe-area.
+           We push the card high enough to clear it. On desktop bottom-6 is fine. */
+        bottom: "calc(4.5rem + env(safe-area-inset-bottom, 0px))",
         background: "var(--color-surface)",
         border: `1px solid ${color}66`,
-        minWidth: "320px",
+        minWidth: "280px",
         maxWidth: "90vw",
         boxShadow: `0 8px 40px rgba(0,0,0,0.5), 0 0 0 1px ${color}33`,
       }}
