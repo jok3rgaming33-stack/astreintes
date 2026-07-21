@@ -4,9 +4,11 @@ import dynamic from "next/dynamic";
 import { useState, useCallback, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import PersonCard from "@/components/PersonCard";
+import RouteResults from "@/components/RouteResults";
 import { type Person, type Role } from "@/lib/people";
 import { type NetworkIncident } from "@/components/AddressSearch";
 import { getOnCallNoms } from "@/lib/schedule";
+import { computeRouteResults, type RouteResult } from "@/lib/routing";
 
 const MapComponent = dynamic(() => import("@/components/MapComponent"), {
   ssr: false,
@@ -65,13 +67,43 @@ export default function Home() {
     setSelectedPerson(person);
   }, []);
 
-  const handleAddIncident = useCallback((incident: NetworkIncident) => {
-    setIncidents((prev) => [...prev, incident]);
-  }, []);
+  // Routing results panel
+  const [activeRouteIncident, setActiveRouteIncident] = useState<NetworkIncident | null>(null);
+  const [routeResults, setRouteResults] = useState<RouteResult[]>([]);
+  const [routeLoading, setRouteLoading] = useState(false);
 
-  const handleRemoveIncident = useCallback((id: string) => {
-    setIncidents((prev) => prev.filter((inc) => inc.id !== id));
-  }, []);
+  const handleAddIncident = useCallback(
+    async (incident: NetworkIncident) => {
+      setIncidents((prev) => [...prev, incident]);
+      // Immediately show loading panel for this incident
+      setActiveRouteIncident(incident);
+      setRouteResults([]);
+      setRouteLoading(true);
+      try {
+        const results = await computeRouteResults(
+          incident.lat,
+          incident.lng,
+          onCallNoms
+        );
+        setRouteResults(results);
+      } finally {
+        setRouteLoading(false);
+      }
+    },
+    [onCallNoms]
+  );
+
+  const handleRemoveIncident = useCallback(
+    (id: string) => {
+      setIncidents((prev) => prev.filter((inc) => inc.id !== id));
+      // If we're showing results for this incident, clear them
+      if (activeRouteIncident?.id === id) {
+        setActiveRouteIncident(null);
+        setRouteResults([]);
+      }
+    },
+    [activeRouteIncident]
+  );
 
   return (
     /* 100dvh = dynamic viewport height: shrinks when the browser chrome appears on mobile */
@@ -108,6 +140,18 @@ export default function Home() {
           <PersonCard
             person={selectedPerson}
             onClose={() => setSelectedPerson(null)}
+          />
+        )}
+
+        {activeRouteIncident && (
+          <RouteResults
+            incident={activeRouteIncident}
+            results={routeResults}
+            loading={routeLoading}
+            onClose={() => {
+              setActiveRouteIncident(null);
+              setRouteResults([]);
+            }}
           />
         )}
 
