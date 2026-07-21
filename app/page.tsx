@@ -163,38 +163,6 @@ export default function Home() {
     setSelectedPerson(person);
   }, []);
 
-  // Click-to-place mode
-  const [clickToPlaceMode, setClickToPlaceMode] = useState(false);
-
-  const handleMapClick = useCallback(
-    async (lat: number, lng: number) => {
-      // Exit place mode immediately so a second click doesn't place again
-      setClickToPlaceMode(false);
-
-      // Reverse geocode with Nominatim to get a human-readable label
-      let label = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
-      try {
-        const r = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`,
-          { headers: { "Accept-Language": "fr" } }
-        );
-        if (r.ok) {
-          const data = await r.json();
-          label = data.display_name ?? label;
-        }
-      } catch { /* keep coordinate label */ }
-
-      const incident: NetworkIncident = {
-        id: `map-click-${Date.now()}`,
-        label,
-        lat,
-        lng,
-      };
-      await handleAddIncident(incident);
-    },
-    [handleAddIncident]
-  );
-
   // Routing results panel
   const [activeRouteIncident, setActiveRouteIncident] = useState<NetworkIncident | null>(null);
   const [routeResults, setRouteResults] = useState<RouteResult[]>([]);
@@ -224,6 +192,34 @@ export default function Home() {
       }
     },
     [onCallNoms, holidayNoms]
+  );
+
+  // Click-to-place mode — declared AFTER handleAddIncident to satisfy TS forward-ref rules
+  const [clickToPlaceMode, setClickToPlaceMode] = useState(false);
+
+  const handleMapClick = useCallback(
+    async (lat: number, lng: number) => {
+      setClickToPlaceMode(false);
+      let label = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+      try {
+        const r = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`,
+          { headers: { "Accept-Language": "fr" } }
+        );
+        if (r.ok) {
+          const data = await r.json();
+          label = data.display_name ?? label;
+        }
+      } catch { /* keep coordinate label */ }
+
+      await handleAddIncident({
+        id: `map-click-${Date.now()}`,
+        label,
+        lat,
+        lng,
+      });
+    },
+    [handleAddIncident]
   );
 
   const handleRemoveIncident = useCallback(
