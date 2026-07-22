@@ -6,7 +6,7 @@ import Sidebar from "@/components/Sidebar";
 import PersonCard from "@/components/PersonCard";
 import RouteResults from "@/components/RouteResults";
 import { type Person, type Role } from "@/lib/people";
-import { type NetworkIncident } from "@/components/AddressSearch";
+import AddressSearch, { type NetworkIncident } from "@/components/AddressSearch";
 import { getOnCallNoms } from "@/lib/schedule";
 import { computeRouteResults, type RouteResult } from "@/lib/routing";
 import {
@@ -49,6 +49,7 @@ export default function Home() {
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
   const [incidents, setIncidents] = useState<NetworkIncident[]>([]);
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
+  const [incidentModalOpen, setIncidentModalOpen] = useState(false);
 
   // On-call: seeded from the daily schedule, overrideable via DB
   const [onCallNoms, setOnCallNoms] = useState<Set<string>>(() => getOnCallNoms(new Date()));
@@ -338,55 +339,138 @@ export default function Home() {
           onIncidentClick={handleIncidentClick}
         />
 
-        {/* Place-incident toggle button */}
-        <button
-          onClick={() => setClickToPlaceMode((v) => !v)}
-          className="absolute top-3 left-3 z-[1000] flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold shadow-lg transition-all active:scale-95"
-          style={{
-            background: clickToPlaceMode ? "#ef4444" : "var(--color-surface)",
-            border: `1px solid ${clickToPlaceMode ? "#ef4444" : "var(--color-border)"}`,
-            color: clickToPlaceMode ? "#fff" : "var(--color-text-primary)",
-            boxShadow: clickToPlaceMode ? "0 0 0 3px rgba(239,68,68,0.3)" : "0 2px 12px rgba(0,0,0,0.4)",
-          }}
-          title={clickToPlaceMode ? "Annuler — cliquez pour annuler le placement" : "Cliquer sur la carte pour signaler une panne"}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            {clickToPlaceMode ? (
-              /* X icon when active */
-              <>
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </>
-            ) : (
-              /* wifi-off icon */
-              <>
-                <line x1="1" y1="1" x2="23" y2="23"/>
-                <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/>
-                <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/>
-                <path d="M10.71 5.05A16 16 0 0 1 22.56 9"/>
-                <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/>
-                <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
-                <line x1="12" y1="20" x2="12.01" y2="20"/>
-              </>
-            )}
-          </svg>
-          {clickToPlaceMode ? "Annuler" : "Signaler une panne"}
-        </button>
+        {/* Signaler une panne button — opens choice modal */}
+        {!clickToPlaceMode ? (
+          <button
+            onClick={() => setIncidentModalOpen(true)}
+            className="absolute top-3 left-3 z-[1000] flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold shadow-lg transition-all active:scale-95"
+            style={{
+              background: "var(--color-surface)",
+              border: "1px solid var(--color-border)",
+              color: "var(--color-text-primary)",
+              boxShadow: "0 2px 12px rgba(0,0,0,0.4)",
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="1" y1="1" x2="23" y2="23"/>
+              <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/>
+              <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/>
+              <path d="M10.71 5.05A16 16 0 0 1 22.56 9"/>
+              <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/>
+              <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+              <line x1="12" y1="20" x2="12.01" y2="20"/>
+            </svg>
+            Signaler une panne
+          </button>
+        ) : (
+          /* Cancel button when click-to-place mode is active */
+          <button
+            onClick={() => setClickToPlaceMode(false)}
+            className="absolute top-3 left-3 z-[1000] flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold shadow-lg transition-all active:scale-95"
+            style={{
+              background: "#ef4444",
+              border: "1px solid #ef4444",
+              color: "#fff",
+              boxShadow: "0 0 0 3px rgba(239,68,68,0.3)",
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+            Annuler
+          </button>
+        )}
 
         {/* Crosshair hint overlay when click-to-place is active */}
         {clickToPlaceMode && (
-          <div
-            className="absolute inset-x-0 top-14 z-[999] flex justify-center pointer-events-none"
-          >
+          <div className="absolute inset-x-0 top-14 z-[999] flex justify-center pointer-events-none">
             <div
               className="px-4 py-2 rounded-full text-xs font-medium shadow-xl"
-              style={{
-                background: "rgba(239,68,68,0.92)",
-                color: "#fff",
-                backdropFilter: "blur(4px)",
-              }}
+              style={{ background: "rgba(239,68,68,0.92)", color: "#fff", backdropFilter: "blur(4px)" }}
             >
               Cliquez sur la carte pour marquer la panne
+            </div>
+          </div>
+        )}
+
+        {/* Incident choice modal */}
+        {incidentModalOpen && (
+          <div
+            className="absolute inset-0 z-[1800] flex items-center justify-center"
+            onClick={(e) => { if (e.target === e.currentTarget) setIncidentModalOpen(false); }}
+          >
+            <div className="absolute inset-0 bg-black/50" />
+            <div
+              className="relative z-10 rounded-2xl p-5 flex flex-col gap-4 shadow-2xl"
+              style={{
+                background: "var(--color-surface)",
+                border: "1px solid var(--color-border)",
+                width: "min(340px, calc(100vw - 2rem))",
+              }}
+            >
+              {/* Modal header */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-bold" style={{ color: "var(--color-text-primary)" }}>
+                    Signaler une panne
+                  </p>
+                  <p className="text-xs mt-0.5" style={{ color: "var(--color-text-secondary)" }}>
+                    Choisissez votre méthode de localisation
+                  </p>
+                </div>
+                <button
+                  onClick={() => setIncidentModalOpen(false)}
+                  className="rounded-lg p-1.5 hover:bg-white/10 transition-colors"
+                  style={{ color: "var(--color-text-secondary)" }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Option 1 — click on map */}
+              <button
+                onClick={() => { setIncidentModalOpen(false); setClickToPlaceMode(true); }}
+                className="flex items-center gap-4 px-4 py-3.5 rounded-xl text-left transition-all hover:bg-white/5 active:scale-[0.98]"
+                style={{ border: "1px solid var(--color-border)" }}
+              >
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.3)" }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                    <circle cx="12" cy="10" r="3"/>
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold" style={{ color: "var(--color-text-primary)" }}>
+                    Cliquer sur la carte
+                  </p>
+                  <p className="text-xs mt-0.5" style={{ color: "var(--color-text-secondary)" }}>
+                    Placez directement le repère sur la zone concernée
+                  </p>
+                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--color-text-secondary)", flexShrink: 0 }}>
+                  <path d="M9 18l6-6-6-6"/>
+                </svg>
+              </button>
+
+              {/* Option 2 — address search (inline) */}
+              <div className="flex flex-col gap-2">
+                <p className="text-xs font-semibold px-1" style={{ color: "var(--color-text-secondary)" }}>
+                  Ou saisir une adresse
+                </p>
+                {/* Inline AddressSearch */}
+                <IncidentAddressSearch
+                  onAddIncident={(incident) => {
+                    setIncidentModalOpen(false);
+                    handleAddIncident(incident);
+                  }}
+                />
+              </div>
             </div>
           </div>
         )}
@@ -395,6 +479,7 @@ export default function Home() {
           <PersonCard
             person={selectedPerson}
             onClose={() => setSelectedPerson(null)}
+            isOnCall={onCallNoms.has(selectedPerson.nom)}
           />
         )}
 
@@ -426,7 +511,7 @@ export default function Home() {
             <line x1="3" y1="12" x2="21" y2="12" />
             <line x1="3" y1="18" x2="21" y2="18" />
           </svg>
-          Équipes &amp; filtres
+          Effectifs
         </button>
       </div>
 
@@ -492,4 +577,9 @@ export default function Home() {
     </main>
     </>
   );
+}
+
+/** Thin wrapper so AddressSearch can call onAddIncident directly inside the modal */
+function IncidentAddressSearch({ onAddIncident }: { onAddIncident: (i: NetworkIncident) => void }) {
+  return <AddressSearch onAddIncident={onAddIncident} />;
 }

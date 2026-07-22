@@ -40,20 +40,43 @@ export default function RouteResults({
     >
       {/* Header */}
       <div
-        className="flex items-start justify-between gap-3 px-4 py-3 flex-shrink-0"
+        className="flex items-start justify-between gap-3 px-4 pt-3 pb-2 flex-shrink-0"
         style={{ borderBottom: "1px solid var(--color-border)", background: "rgba(239,68,68,0.08)" }}
       >
         <div className="flex-1 min-w-0">
           <p className="text-xs font-semibold uppercase tracking-wider mb-0.5" style={{ color: "#ef4444" }}>
             Panne signalée
           </p>
-          <p className="text-xs leading-tight truncate" style={{ color: "var(--color-text-secondary)" }}>
+          <p className="text-xs leading-tight line-clamp-2" style={{ color: "var(--color-text-secondary)" }}>
             {incident.label}
           </p>
+          {/* Navigation links */}
+          <div className="flex items-center gap-2 mt-2">
+            <a
+              href={`https://waze.com/ul?ll=${incident.lat},${incident.lng}&navigate=yes`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors hover:opacity-80"
+              style={{ background: "rgba(0,208,132,0.15)", color: "#00d084", border: "1px solid rgba(0,208,132,0.3)" }}
+            >
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+              Waze
+            </a>
+            <a
+              href={`https://www.google.com/maps/dir/?api=1&destination=${incident.lat},${incident.lng}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors hover:opacity-80"
+              style={{ background: "rgba(66,133,244,0.15)", color: "#4285f4", border: "1px solid rgba(66,133,244,0.3)" }}
+            >
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+              Maps
+            </a>
+          </div>
         </div>
         <button
           onClick={onClose}
-          className="flex-shrink-0 rounded-lg p-1 transition-colors hover:bg-white/10"
+          className="flex-shrink-0 rounded-lg p-1 transition-colors hover:bg-white/10 mt-0.5"
           style={{ color: "var(--color-text-secondary)" }}
           title="Fermer"
         >

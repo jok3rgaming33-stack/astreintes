@@ -112,3 +112,13 @@ html, body {
   0%, 100% { box-shadow: 0 0 0 4px rgba(239,68,68,0.25), 0 4px 12px rgba(0,0,0,0.55); }
   50%       { box-shadow: 0 0 0 8px rgba(239,68,68,0.10), 0 4px 12px rgba(0,0,0,0.55); }
 }
+
+/* On-call person marker: yellow ring that pulses */
+.person-marker-oncall {
+  animation: pulse-oncall 2.4s ease-in-out infinite;
+}
+
+@keyframes pulse-oncall {
+  0%, 100% { box-shadow: 0 0 0 3px #eab308, 0 0 10px 4px rgba(234,179,8,0.55), 0 2px 8px rgba(0,0,0,0.45); }
+  50%       { box-shadow: 0 0 0 6px #eab308, 0 0 18px 8px rgba(234,179,8,0.25), 0 2px 8px rgba(0,0,0,0.45); }
+}

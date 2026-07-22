@@ -171,7 +171,7 @@ export default function AddressSearch({ onAddIncident }: AddressSearchProps) {
           </span>
           <input
             type="text"
-            placeholder="Signaler une panne réseau (adresse)…"
+            placeholder="Adresse ou lieu de la panne…"
             value={query}
             onChange={handleChange}
             className="w-full pl-9 pr-3 py-2 rounded-lg text-sm outline-none transition-colors"
@@ -264,7 +264,7 @@ export default function AddressSearch({ onAddIncident }: AddressSearchProps) {
             <path d="M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12" />
           </svg>
         )}
-        {geoLoading ? "Localisation…" : "Ma position"}
+        {geoLoading ? "Localisation…" : "Ma position (si adresse non répertoriée)"}
       </button>
 
       {error && (
