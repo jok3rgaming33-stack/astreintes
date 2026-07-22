@@ -17,6 +17,7 @@ import {
   upsertPersonStatus,
 } from "@/app/actions/shared-state";
 import NotificationBanner from "@/components/NotificationBanner";
+import EffectifsModal from "@/components/EffectifsModal";
 import {
   sendNotification,
   buildIncidentNotifBody,
@@ -321,6 +322,8 @@ export default function Home() {
           holidayNoms={holidayNoms}
           onToggleOnCall={handleToggleOnCall}
           onToggleHoliday={handleToggleHoliday}
+          hidePersonList
+          onOpenEffectifs={() => setEffectifsModalOpen(true)}
         />
       </div>
 
@@ -604,82 +607,19 @@ export default function Home() {
           </div>
         </div>
       )}
-      {/* Effectifs modal — centered fullscreen, all screen sizes */}
-      {effectifsModalOpen && (
-        <div
-          className="fixed inset-0 z-[2100] flex items-center justify-center p-4"
-          style={{ backdropFilter: "blur(6px)", background: "rgba(0,0,0,0.6)" }}
-          onClick={(e) => { if (e.target === e.currentTarget) setEffectifsModalOpen(false); }}
-        >
-          <div
-            className="relative flex flex-col w-full rounded-2xl overflow-hidden shadow-2xl"
-            style={{
-              background: "var(--color-surface)",
-              border: "1px solid var(--color-border)",
-              maxWidth: "480px",
-              height: "min(88dvh, 700px)",
-              paddingBottom: "env(safe-area-inset-bottom, 0px)",
-            }}
-          >
-            {/* Header */}
-            <div
-              className="flex-shrink-0 flex items-center justify-between px-5 py-4"
-              style={{ borderBottom: "1px solid var(--color-border)" }}
-            >
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-8 h-8 rounded-xl flex items-center justify-center"
-                  style={{ background: "rgba(59,130,246,0.15)", border: "1px solid rgba(59,130,246,0.3)" }}
-                >
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                    <circle cx="9" cy="7" r="4"/>
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-sm font-bold" style={{ color: "var(--color-text-primary)" }}>Effectifs</p>
-                  <p className="text-xs" style={{ color: "var(--color-text-secondary)" }}>Gestion des astreintes et congés</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setEffectifsModalOpen(false)}
-                className="w-8 h-8 rounded-xl flex items-center justify-center transition-colors hover:bg-white/10"
-                style={{ color: "var(--color-text-secondary)", border: "1px solid var(--color-border)" }}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </button>
-            </div>
-
-            {/* Scrollable list */}
-            <div className="flex-1 overflow-y-auto">
-              <Sidebar
-                activeRoles={activeRoles}
-                onToggleRole={handleToggleRole}
-                searchQuery={searchQuery}
-                onSearch={setSearchQuery}
-                onPersonSelect={(person) => {
-                  handlePersonSelect(person);
-                  setEffectifsModalOpen(false);
-                }}
-                selectedPerson={selectedPerson}
-                incidents={incidents}
-                onAddIncident={handleAddIncident}
-                onRemoveIncident={handleRemoveIncident}
-                onCallNoms={onCallNoms}
-                holidayNoms={holidayNoms}
-                onToggleOnCall={handleToggleOnCall}
-                onToggleHoliday={handleToggleHoliday}
-                mobileSheet
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Effectifs modal — dedicated, list only */}
+      <EffectifsModal
+        open={effectifsModalOpen}
+        onClose={() => setEffectifsModalOpen(false)}
+        onPersonSelect={(person) => {
+          handlePersonSelect(person);
+          setEffectifsModalOpen(false);
+        }}
+        onCallNoms={onCallNoms}
+        holidayNoms={holidayNoms}
+        onToggleOnCall={handleToggleOnCall}
+        onToggleHoliday={handleToggleHoliday}
+      />
 
     </main>
     </>
