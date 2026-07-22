@@ -50,6 +50,7 @@ export default function Home() {
   const [incidents, setIncidents] = useState<NetworkIncident[]>([]);
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
   const [incidentModalOpen, setIncidentModalOpen] = useState(false);
+  const [effectifsModalOpen, setEffectifsModalOpen] = useState(false);
 
   // On-call: seeded from the daily schedule, overrideable via DB
   const [onCallNoms, setOnCallNoms] = useState<Set<string>>(() => getOnCallNoms(new Date()));
@@ -569,11 +570,85 @@ export default function Home() {
                 onToggleOnCall={handleToggleOnCall}
                 onToggleHoliday={handleToggleHoliday}
                 mobileSheet
+                hidePersonList
+                onOpenEffectifs={() => {
+                  setMobileSheetOpen(false);
+                  setEffectifsModalOpen(true);
+                }}
               />
             </div>
           </div>
         </div>
       )}
+      {/* Effectifs modal */}
+      {effectifsModalOpen && (
+        <div
+          className="md:hidden fixed inset-0 z-[2100] flex flex-col justify-end"
+          onClick={(e) => { if (e.target === e.currentTarget) setEffectifsModalOpen(false); }}
+        >
+          <div className="absolute inset-0 bg-black/50" />
+          <div
+            className="relative flex flex-col rounded-t-2xl overflow-hidden"
+            style={{
+              background: "var(--color-surface)",
+              height: "92dvh",
+              maxHeight: "92dvh",
+              border: "1px solid var(--color-border)",
+              paddingBottom: "env(safe-area-inset-bottom, 0px)",
+            }}
+          >
+            {/* Header */}
+            <div
+              className="flex items-center justify-between px-4 py-3 flex-shrink-0"
+              style={{ borderBottom: "1px solid var(--color-border)" }}
+            >
+              <div className="flex items-center gap-2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--color-accent)" }}>
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                <p className="text-sm font-bold" style={{ color: "var(--color-text-primary)" }}>Effectifs</p>
+              </div>
+              <button
+                onClick={() => setEffectifsModalOpen(false)}
+                className="rounded-lg p-1.5 transition-colors hover:bg-white/10"
+                style={{ color: "var(--color-text-secondary)" }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Full Sidebar (list only — no search/filters/incidents) */}
+            <div className="flex-1 overflow-y-auto">
+              <Sidebar
+                activeRoles={activeRoles}
+                onToggleRole={handleToggleRole}
+                searchQuery={searchQuery}
+                onSearch={setSearchQuery}
+                onPersonSelect={(person) => {
+                  handlePersonSelect(person);
+                  setEffectifsModalOpen(false);
+                }}
+                selectedPerson={selectedPerson}
+                incidents={incidents}
+                onAddIncident={handleAddIncident}
+                onRemoveIncident={handleRemoveIncident}
+                onCallNoms={onCallNoms}
+                holidayNoms={holidayNoms}
+                onToggleOnCall={handleToggleOnCall}
+                onToggleHoliday={handleToggleHoliday}
+                mobileSheet
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
     </main>
     </>
   );

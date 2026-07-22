@@ -19,6 +19,10 @@ interface SidebarProps {
   onRemoveIncident: (id: string) => void;
   /** When true, disables the collapse button and fills the parent width (used in mobile sheet) */
   mobileSheet?: boolean;
+  /** When true, hides the person list (shown in a separate modal on mobile) */
+  hidePersonList?: boolean;
+  /** Called when the "Voir les effectifs" button is clicked */
+  onOpenEffectifs?: () => void;
   /** Set of person noms currently on-call — shown as a banner and highlighted in the list */
   onCallNoms?: Set<string>;
   /** Set of person noms currently on holiday — excluded from routing */
@@ -40,6 +44,8 @@ export default function Sidebar({
   onAddIncident,
   onRemoveIncident,
   mobileSheet = false,
+  hidePersonList = false,
+  onOpenEffectifs,
   onCallNoms,
   holidayNoms = new Set(),
   onToggleOnCall,
@@ -283,8 +289,31 @@ export default function Sidebar({
             )}
           </div>
 
-          {/* People list */}
-          <div className="flex-1 overflow-y-auto px-3 py-3">
+          {/* "Voir les effectifs" button — shown in mobile sheet instead of inline list */}
+          {hidePersonList && onOpenEffectifs && (
+            <div className="px-4 py-4">
+              <button
+                onClick={onOpenEffectifs}
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all active:scale-[0.98]"
+                style={{
+                  background: "var(--color-accent)",
+                  color: "#fff",
+                  boxShadow: "0 2px 12px rgba(0,0,0,0.3)",
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                Voir les effectifs
+              </button>
+            </div>
+          )}
+
+          {/* People list — hidden on mobile (shown in dedicated modal) */}
+          {!hidePersonList && <div className="flex-1 overflow-y-auto px-3 py-3">
             {filteredPeople.length === 0 ? (
               <p className="text-sm text-center py-8" style={{ color: "var(--color-text-secondary)" }}>
                 Aucun résultat
@@ -397,7 +426,7 @@ export default function Sidebar({
                 })}
               </div>
             )}
-          </div>
+          </div>}
         </>
       )}
     </aside>
