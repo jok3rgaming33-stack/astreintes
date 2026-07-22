@@ -84,8 +84,8 @@ export default function RouteResults({
             {/* On-call section */}
             {onCallResults.length > 0 && (
               <div className="px-3 pt-3 pb-1">
-                <p className="text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5 mb-2" style={{ color: "#f59e0b" }}>
-                  <span className="w-1.5 h-1.5 rounded-full animate-pulse inline-block" style={{ background: "#f59e0b" }} />
+                <p className="text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5 mb-2" style={{ color: "#10b981" }}>
+                  <span className="w-1.5 h-1.5 rounded-full animate-pulse inline-block" style={{ background: "#10b981" }} />
                   En astreinte
                 </p>
                 <div className="flex flex-col gap-1.5">
@@ -119,14 +119,14 @@ export default function RouteResults({
 function PersonRow({ result }: { result: RouteResult }) {
   const { person, distanceKm, durationMin, isOnCall } = result;
   const color = ROLE_COLORS[person.role];
-  const initials = `${person.prenom[0]}${person.nom[0]}`.toUpperCase();
+  const initials = `${person.prenom[0]}${person.nom.slice(0, 2)}`.toUpperCase();
 
   return (
     <div
       className="flex items-center gap-2.5 px-2 py-2 rounded-lg"
       style={{
-        background: isOnCall ? "rgba(245,158,11,0.07)" : "rgba(255,255,255,0.03)",
-        border: `1px solid ${isOnCall ? "rgba(245,158,11,0.3)" : "var(--color-border)"}`,
+        background: isOnCall ? "rgba(16,185,129,0.07)" : "rgba(255,255,255,0.03)",
+        border: `1px solid ${isOnCall ? "rgba(16,185,129,0.3)" : "var(--color-border)"}`,
       }}
     >
       {/* Avatar */}
@@ -134,7 +134,7 @@ function PersonRow({ result }: { result: RouteResult }) {
         className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
         style={{
           background: color,
-          boxShadow: isOnCall ? "0 0 0 2px #f59e0b" : "none",
+          boxShadow: isOnCall ? "0 0 0 2px #10b981" : "none",
         }}
       >
         {initials}
@@ -166,7 +166,7 @@ function PersonRow({ result }: { result: RouteResult }) {
 
       {/* Distance + duration */}
       <div className="flex-shrink-0 text-right">
-        <p className="text-xs font-bold leading-tight" style={{ color: isOnCall ? "#f59e0b" : "var(--color-text-primary)" }}>
+        <p className="text-xs font-bold leading-tight" style={{ color: isOnCall ? "#10b981" : "var(--color-text-primary)" }}>
           {formatDuration(durationMin)}
         </p>
         <p className="text-xs" style={{ color: "var(--color-text-secondary)" }}>

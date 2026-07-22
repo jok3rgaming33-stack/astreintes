@@ -20,7 +20,8 @@ function buildPersonIcon(
   isProximity = false,
   isHoliday = false
 ): L.DivIcon {
-  const initials = `${person.prenom[0]}${person.nom[0]}`.toUpperCase();
+  // 1 letter of first name + first 2 letters of last name
+  const initials = `${person.prenom[0]}${person.nom.slice(0, 2)}`.toUpperCase();
   const color = isHoliday ? "#6b7280" : ROLE_COLORS[person.role];
 
   let ring = "";
@@ -31,8 +32,8 @@ function buildPersonIcon(
     extra = "opacity:0.45;";
     badge = `<span style="position:absolute;top:-5px;right:-5px;width:13px;height:13px;border-radius:50%;background:#374151;border:2px solid #111827;display:flex;align-items:center;justify-content:center;font-size:8px;line-height:1;">🌴</span>`;
   } else if (isOnCall) {
-    ring = `box-shadow:0 0 0 3px #f59e0b,0 0 10px 4px rgba(245,158,11,0.55);`;
-    badge = `<span style="position:absolute;top:-5px;right:-5px;width:12px;height:12px;border-radius:50%;background:#f59e0b;border:2px solid #111827;display:flex;align-items:center;justify-content:center;font-size:7px;color:#111827;font-weight:900;">!</span>`;
+    ring = `box-shadow:0 0 0 3px #10b981,0 0 10px 4px rgba(16,185,129,0.55);`;
+    badge = `<span style="position:absolute;top:-5px;right:-5px;width:12px;height:12px;border-radius:50%;background:#10b981;border:2px solid #111827;display:flex;align-items:center;justify-content:center;font-size:7px;color:#111827;font-weight:900;">!</span>`;
   } else if (isProximity) {
     ring = `box-shadow:0 0 0 3px #06b6d4,0 0 8px 3px rgba(6,182,212,0.45);`;
     badge = `<span style="position:absolute;top:-5px;right:-5px;width:12px;height:12px;border-radius:50%;background:#06b6d4;border:2px solid #111827;display:flex;align-items:center;justify-content:center;font-size:8px;color:#111827;font-weight:900;">⏱</span>`;
@@ -40,9 +41,9 @@ function buildPersonIcon(
 
   return L.divIcon({
     className: "",
-    html: `<div class="person-marker" style="background-color:${color};position:relative;${ring}${extra}">${initials}${badge}</div>`,
-    iconSize: [34, 34],
-    iconAnchor: [17, 17],
+    html: `<div class="person-marker" style="background-color:${color};position:relative;min-width:38px;${ring}${extra}">${initials}${badge}</div>`,
+    iconSize: [38, 34],
+    iconAnchor: [19, 17],
     popupAnchor: [0, -20],
   });
 }

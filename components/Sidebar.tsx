@@ -158,18 +158,18 @@ export default function Sidebar({
 
           {/* On-call banner */}
           {effectiveOnCallNoms.size > 0 && (
-            <div className="px-4 py-3" style={{ borderBottom: "1px solid var(--color-border)", background: "rgba(245,158,11,0.07)" }}>
-              <p className="text-xs font-semibold uppercase tracking-wider mb-2 flex items-center gap-1.5" style={{ color: "#f59e0b" }}>
+            <div className="px-4 py-3" style={{ borderBottom: "1px solid var(--color-border)", background: "rgba(16,185,129,0.07)" }}>
+              <p className="text-xs font-semibold uppercase tracking-wider mb-2 flex items-center gap-1.5" style={{ color: "#10b981" }}>
                 <span
                   className="inline-block w-2 h-2 rounded-full animate-pulse"
-                  style={{ background: "#f59e0b" }}
+                  style={{ background: "#10b981" }}
                 />
                 En astreinte aujourd&apos;hui
               </p>
               <div className="flex flex-col gap-1">
                 {PEOPLE.filter((p) => effectiveOnCallNoms.has(p.nom) && !holidayNoms.has(p.nom)).map((p) => {
                   const color = ROLE_COLORS[p.role];
-                  const initials = `${p.prenom[0]}${p.nom[0]}`.toUpperCase();
+                  const initials = `${p.prenom[0]}${p.nom.slice(0, 2)}`.toUpperCase();
                   return (
                     <button
                       key={`${p.nom}-${p.prenom}`}
@@ -179,7 +179,7 @@ export default function Sidebar({
                     >
                       <div
                         className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
-                        style={{ background: color, boxShadow: "0 0 0 2px #f59e0b" }}
+                        style={{ background: color, boxShadow: "0 0 0 2px #10b981" }}
                       >
                         {initials}
                       </div>
@@ -187,7 +187,7 @@ export default function Sidebar({
                         <p className="text-xs font-semibold leading-tight truncate" style={{ color: "var(--color-text-primary)" }}>
                           {p.prenom} {p.nom}
                         </p>
-                        <p className="text-xs truncate" style={{ color: "#f59e0b", opacity: 0.8 }}>
+                        <p className="text-xs truncate" style={{ color: "#10b981", opacity: 0.8 }}>
                           {p.ville}
                         </p>
                       </div>
@@ -293,7 +293,7 @@ export default function Sidebar({
               <div className="flex flex-col gap-1">
                 {filteredPeople.map((person, i) => {
                   const color = ROLE_COLORS[person.role];
-                  const initials = `${person.prenom[0]}${person.nom[0]}`.toUpperCase();
+                  const initials = `${person.prenom[0]}${person.nom.slice(0, 2)}`.toUpperCase();
                   const isSelected = selectedPerson === person;
                   const isOnCall = effectiveOnCallNoms.has(person.nom);
                   const isHoliday = holidayNoms.has(person.nom);
@@ -302,7 +302,7 @@ export default function Sidebar({
                   let rowBorder = "transparent";
                   if (isHoliday) { rowBg = "rgba(107,114,128,0.08)"; rowBorder = "rgba(107,114,128,0.3)"; }
                   else if (isSelected) { rowBg = `${color}22`; rowBorder = color; }
-                  else if (isOnCall) { rowBg = "rgba(245,158,11,0.06)"; rowBorder = "rgba(245,158,11,0.4)"; }
+                  else if (isOnCall) { rowBg = "rgba(16,185,129,0.06)"; rowBorder = "rgba(16,185,129,0.4)"; }
 
                   return (
                     <div
@@ -323,14 +323,14 @@ export default function Sidebar({
                           className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 relative"
                           style={{
                             background: isHoliday ? "#6b7280" : color,
-                            boxShadow: isOnCall ? "0 0 0 2px #f59e0b" : "none",
+                            boxShadow: isOnCall ? "0 0 0 2px #10b981" : "none",
                           }}
                         >
                           {initials}
                           {isOnCall && !isHoliday && (
                             <span
                               className="absolute -top-1 -right-1 w-3 h-3 rounded-full flex items-center justify-center text-black font-black"
-                              style={{ background: "#f59e0b", fontSize: "7px", border: "1.5px solid var(--color-surface)" }}
+                              style={{ background: "#10b981", fontSize: "7px", border: "1.5px solid var(--color-surface)" }}
                             >!</span>
                           )}
                           {isHoliday && (
@@ -363,9 +363,9 @@ export default function Sidebar({
                         title={isOnCall ? "Retirer de l'astreinte" : "Mettre en astreinte"}
                         className="flex-shrink-0 w-7 h-7 rounded-md flex items-center justify-center transition-colors"
                         style={{
-                          background: isOnCall ? "rgba(245,158,11,0.2)" : "var(--color-surface-elevated)",
-                          border: `1px solid ${isOnCall ? "#f59e0b" : "var(--color-border)"}`,
-                          color: isOnCall ? "#f59e0b" : "var(--color-text-secondary)",
+                          background: isOnCall ? "rgba(16,185,129,0.2)" : "var(--color-surface-elevated)",
+                          border: `1px solid ${isOnCall ? "#10b981" : "var(--color-border)"}`,
+                          color: isOnCall ? "#10b981" : "var(--color-text-secondary)",
                           opacity: isHoliday ? 0.3 : 1,
                           cursor: isHoliday ? "not-allowed" : "pointer",
                         }}

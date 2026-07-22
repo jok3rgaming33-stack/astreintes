@@ -441,7 +441,8 @@ export default function Home() {
             className="relative flex flex-col rounded-t-2xl overflow-hidden"
             style={{
               background: "var(--color-surface)",
-              maxHeight: "85dvh",
+              height: "90dvh",
+              maxHeight: "90dvh",
               border: "1px solid var(--color-border)",
               paddingBottom: "env(safe-area-inset-bottom, 0px)",
             }}
