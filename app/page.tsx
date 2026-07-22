@@ -496,24 +496,48 @@ export default function Home() {
           />
         )}
 
-        {/* Mobile FAB */}
-        <button
-          className="md:hidden absolute left-1/2 -translate-x-1/2 z-[1000] flex items-center gap-2 px-5 py-3 rounded-full text-sm font-semibold transition-all active:scale-95"
-          style={{
-            bottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))",
-            background: "var(--color-accent)",
-            color: "#fff",
-            boxShadow: "0 4px 24px rgba(0,0,0,0.4)",
-          }}
-          onClick={() => setMobileSheetOpen(true)}
+        {/* Mobile FABs */}
+        <div
+          className="md:hidden absolute left-1/2 -translate-x-1/2 z-[1000] flex items-center gap-2"
+          style={{ bottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))" }}
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="3" y1="6" x2="21" y2="6" />
-            <line x1="3" y1="12" x2="21" y2="12" />
-            <line x1="3" y1="18" x2="21" y2="18" />
-          </svg>
-          Effectifs
-        </button>
+          {/* Filters / Signalement sheet */}
+          <button
+            className="flex items-center gap-2 px-4 py-3 rounded-full text-sm font-semibold transition-all active:scale-95"
+            style={{
+              background: "var(--color-surface)",
+              border: "1px solid var(--color-border)",
+              color: "var(--color-text-primary)",
+              boxShadow: "0 4px 24px rgba(0,0,0,0.4)",
+            }}
+            onClick={() => setMobileSheetOpen(true)}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+            Filtres
+          </button>
+          {/* Effectifs modal */}
+          <button
+            className="flex items-center gap-2 px-4 py-3 rounded-full text-sm font-semibold transition-all active:scale-95"
+            style={{
+              background: "var(--color-accent)",
+              color: "#fff",
+              boxShadow: "0 4px 24px rgba(0,0,0,0.4)",
+            }}
+            onClick={() => setEffectifsModalOpen(true)}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            Effectifs
+          </button>
+        </div>
       </div>
 
       {/* Mobile bottom-sheet */}
@@ -580,50 +604,58 @@ export default function Home() {
           </div>
         </div>
       )}
-      {/* Effectifs modal */}
+      {/* Effectifs modal — centered fullscreen, all screen sizes */}
       {effectifsModalOpen && (
         <div
-          className="md:hidden fixed inset-0 z-[2100] flex flex-col justify-end"
+          className="fixed inset-0 z-[2100] flex items-center justify-center p-4"
+          style={{ backdropFilter: "blur(6px)", background: "rgba(0,0,0,0.6)" }}
           onClick={(e) => { if (e.target === e.currentTarget) setEffectifsModalOpen(false); }}
         >
-          <div className="absolute inset-0 bg-black/50" />
           <div
-            className="relative flex flex-col rounded-t-2xl overflow-hidden"
+            className="relative flex flex-col w-full rounded-2xl overflow-hidden shadow-2xl"
             style={{
               background: "var(--color-surface)",
-              height: "92dvh",
-              maxHeight: "92dvh",
               border: "1px solid var(--color-border)",
+              maxWidth: "480px",
+              height: "min(88dvh, 700px)",
               paddingBottom: "env(safe-area-inset-bottom, 0px)",
             }}
           >
             {/* Header */}
             <div
-              className="flex items-center justify-between px-4 py-3 flex-shrink-0"
+              className="flex-shrink-0 flex items-center justify-between px-5 py-4"
               style={{ borderBottom: "1px solid var(--color-border)" }}
             >
-              <div className="flex items-center gap-2">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--color-accent)" }}>
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                  <circle cx="9" cy="7" r="4"/>
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                </svg>
-                <p className="text-sm font-bold" style={{ color: "var(--color-text-primary)" }}>Effectifs</p>
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-8 h-8 rounded-xl flex items-center justify-center"
+                  style={{ background: "rgba(59,130,246,0.15)", border: "1px solid rgba(59,130,246,0.3)" }}
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm font-bold" style={{ color: "var(--color-text-primary)" }}>Effectifs</p>
+                  <p className="text-xs" style={{ color: "var(--color-text-secondary)" }}>Gestion des astreintes et congés</p>
+                </div>
               </div>
               <button
                 onClick={() => setEffectifsModalOpen(false)}
-                className="rounded-lg p-1.5 transition-colors hover:bg-white/10"
-                style={{ color: "var(--color-text-secondary)" }}
+                className="w-8 h-8 rounded-xl flex items-center justify-center transition-colors hover:bg-white/10"
+                style={{ color: "var(--color-text-secondary)", border: "1px solid var(--color-border)" }}
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="18" y1="6" x2="6" y2="18" />
                   <line x1="6" y1="6" x2="18" y2="18" />
                 </svg>
               </button>
             </div>
 
-            {/* Full Sidebar (list only — no search/filters/incidents) */}
+            {/* Scrollable list */}
             <div className="flex-1 overflow-y-auto">
               <Sidebar
                 activeRoles={activeRoles}
