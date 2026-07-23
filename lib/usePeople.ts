@@ -122,24 +122,55 @@ export function usePeople() {
     [customPeople]
   );
 
-  /** Update a custom person's role and/or address — persisted in DB */
+  /** Update any person's role and/or address — persisted in DB.
+   *  Base PEOPLE (no id) are first inserted into custom_people, then updated.
+   *  The original base entry is hidden via removed_people so there's no duplicate.
+   */
   const updatePerson = useCallback(
     async (
       person: Person,
       updates: { role?: Person["role"]; ville?: string; codePostal?: string; lat?: number; lng?: number }
     ) => {
-      if (!person.id) return; // base PEOPLE cannot be updated via DB
-      await mutateCustom(
-        async (prev = []) => {
-          await updatePersonProfile(person.id!, updates);
-          return prev.map((p) =>
-            p.id === person.id ? { ...p, ...updates } : p
-          );
-        },
-        { revalidate: true }
+      const existingCustom = customPeople.find(
+        (p) => `${p.prenom}|${p.nom}` === `${person.prenom}|${person.nom}`
       );
+
+      if (existingCustom?.id) {
+        // Already a custom entry — just update it
+        await mutateCustom(
+          async (prev = []) => {
+            await updatePersonProfile(existingCustom.id!, updates);
+            return prev.map((p) =>
+              p.id === existingCustom.id ? { ...p, ...updates } : p
+            );
+          },
+          { revalidate: true }
+        );
+      } else {
+        // Base PEOPLE entry — insert as custom override, then hide the base entry
+        const newId = `custom-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        const overridden: Person = { ...person, ...updates, id: newId };
+        const baseKey = `${person.prenom}|${person.nom}`;
+
+        await Promise.all([
+          mutateCustom(
+            async (prev = []) => {
+              await addCustomPerson(overridden);
+              return [...prev, overridden];
+            },
+            { revalidate: false }
+          ),
+          mutateRemoved(
+            async (prev = new Set()) => {
+              await addRemovedKey(baseKey);
+              return new Set([...prev, baseKey]);
+            },
+            { revalidate: true }
+          ),
+        ]);
+      }
     },
-    [mutateCustom]
+    [customPeople, mutateCustom, mutateRemoved]
   );
 
   return {
