@@ -676,6 +676,7 @@ export default function AppShell({
         onUpdate={updatePerson}
         isRemoved={isRemoved}
         isCustom={isCustom}
+        canManageRessources={canManageRessources}
       />}
 
     </main>

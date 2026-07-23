@@ -21,6 +21,8 @@ interface GestionRessourcesModalProps {
   onUpdate: (person: Person, updates: { role?: Role; ville?: string; codePostal?: string; lat?: number; lng?: number }) => Promise<void>;
   isRemoved: (person: Person) => boolean;
   isCustom: (person: Person) => boolean;
+  /** Only CIR and Référent may edit profiles */
+  canManageRessources?: boolean;
 }
 
 const EMPTY_FORM = {
@@ -49,6 +51,7 @@ export default function GestionRessourcesModal({
   onUpdate,
   isRemoved,
   isCustom,
+  canManageRessources = false,
 }: GestionRessourcesModalProps) {
   const [tab, setTab] = useState<"list" | "add">("list");
   const [search, setSearch] = useState("");
@@ -435,8 +438,8 @@ export default function GestionRessourcesModal({
                             </button>
                           ) : (
                             <>
-                              {/* Edit button — available for all people */}
-                              <button
+                              {/* Edit button — CIR / Référent only */}
+                              {canManageRessources && <button
                                 onClick={() => isEditing ? closeEdit() : openEdit(person)}
                                 title={isEditing ? "Fermer l'édition" : "Modifier ce profil"}
                                 className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-blue-500/20"
@@ -455,7 +458,7 @@ export default function GestionRessourcesModal({
                                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                                   </svg>
                                 )}
-                              </button>
+                              </button>}
                               {/* Delete button */}
                               <button
                                 onClick={() => setConfirmDelete(person)}
