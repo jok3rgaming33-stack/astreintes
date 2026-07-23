@@ -19,11 +19,12 @@ import {
 import NotificationBanner from "@/components/NotificationBanner";
 import EffectifsModal from "@/components/EffectifsModal";
 import UpdateReminderBanner from "@/components/UpdateReminderBanner";
+import GestionRessourcesModal from "@/components/GestionRessourcesModal";
 import {
   sendNotification,
   buildIncidentNotifBody,
 } from "@/lib/notifications";
-import { PEOPLE } from "@/lib/people";
+import { usePeople } from "@/lib/usePeople";
 
 const MapComponent = dynamic(() => import("@/components/MapComponent"), {
   ssr: false,
@@ -53,6 +54,10 @@ export default function Home() {
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
   const [incidentModalOpen, setIncidentModalOpen] = useState(false);
   const [effectifsModalOpen, setEffectifsModalOpen] = useState(false);
+  const [gestionModalOpen, setGestionModalOpen] = useState(false);
+
+  // People management — extends base PEOPLE with adds/removes stored in localStorage
+  const { people, addPerson, removePerson, restorePerson, isRemoved, isCustom } = usePeople();
   // When true: show only on-call people (in the sidebar list, the modal, and on the map)
   const [onlyOnCall, setOnlyOnCall] = useState(false);
   const handleToggleOnlyOnCall = useCallback(() => setOnlyOnCall((v) => !v), []);
@@ -213,13 +218,15 @@ export default function Home() {
           incident.lat,
           incident.lng,
           onCallNoms,
-          holidayNoms
+          holidayNoms,
+          60,
+          people
         );
         setRouteResults(results);
 
         // --- Notification ---
         // Target: on-call + CIR + REF + proximity (≤1h)
-        const onCallNames = PEOPLE
+        const onCallNames = people
           .filter((p) => onCallNoms.has(p.nom))
           .map((p) => `${p.prenom} ${p.nom}`);
         const proximityNames = results
@@ -283,7 +290,9 @@ export default function Home() {
           incident.lat,
           incident.lng,
           onCallNoms,
-          holidayNoms
+          holidayNoms,
+          60,
+          people
         );
         setRouteResults(results);
       } finally {
@@ -314,6 +323,7 @@ export default function Home() {
       {/* Desktop sidebar */}
       <div className="hidden md:flex h-full">
         <Sidebar
+          people={people}
           activeRoles={activeRoles}
           onToggleRole={handleToggleRole}
           searchQuery={searchQuery}
@@ -337,6 +347,7 @@ export default function Home() {
       {/* Map */}
       <div className="relative flex-1 h-full">
         <MapComponent
+          people={people}
           activeRoles={activeRoles}
           searchQuery={searchQuery}
           onPersonSelect={handlePersonSelect}
@@ -588,6 +599,7 @@ export default function Home() {
             </div>
             <div className="flex-1 overflow-y-auto">
               <Sidebar
+                people={people}
                 activeRoles={activeRoles}
                 onToggleRole={handleToggleRole}
                 searchQuery={searchQuery}
@@ -617,6 +629,7 @@ export default function Home() {
           </div>
         </div>
       )}
+
       {/* Effectifs modal — dedicated, list only */}
       <EffectifsModal
         open={effectifsModalOpen}
@@ -625,12 +638,26 @@ export default function Home() {
           handlePersonSelect(person);
           setEffectifsModalOpen(false);
         }}
+        people={people}
         onCallNoms={onCallNoms}
         holidayNoms={holidayNoms}
         onToggleOnCall={handleToggleOnCall}
         onToggleHoliday={handleToggleHoliday}
         onlyOnCall={onlyOnCall}
         onToggleOnlyOnCall={handleToggleOnlyOnCall}
+        onOpenGestion={() => { setEffectifsModalOpen(false); setGestionModalOpen(true); }}
+      />
+
+      {/* Gestion des ressources modal */}
+      <GestionRessourcesModal
+        open={gestionModalOpen}
+        onClose={() => setGestionModalOpen(false)}
+        people={people}
+        onAdd={addPerson}
+        onRemove={removePerson}
+        onRestore={restorePerson}
+        isRemoved={isRemoved}
+        isCustom={isCustom}
       />
 
     </main>

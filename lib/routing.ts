@@ -4,6 +4,7 @@
  */
 
 import { PEOPLE, type Person } from "@/lib/people";
+// PEOPLE is kept as the default fallback for computeRouteResults
 
 export interface RouteResult {
   person: Person;
@@ -58,12 +59,13 @@ export async function computeRouteResults(
   incidentLng: number,
   onCallNoms: Set<string>,
   holidayNoms: Set<string> = new Set(),
-  maxDurationMin = 60
+  maxDurationMin = 60,
+  people: Person[] = PEOPLE
 ): Promise<RouteResult[]> {
   const results: RouteResult[] = [];
 
   // Persons on holiday are completely excluded from routing
-  const eligible = PEOPLE.filter((p) => !holidayNoms.has(p.nom));
+  const eligible = people.filter((p) => !holidayNoms.has(p.nom));
 
   // Process in batches of 5 to be polite to the free OSRM API
   const batchSize = 5;

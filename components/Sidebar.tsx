@@ -8,6 +8,8 @@ import AddressSearch, { type NetworkIncident } from "@/components/AddressSearch"
 const ALL_ROLES: Role[] = ["CIR", "REF", "TMF", "TMRa", "TMRe"];
 
 interface SidebarProps {
+  /** Active people list — use the usePeople() hook result in the parent */
+  people?: Person[];
   activeRoles: Set<Role>;
   onToggleRole: (role: Role) => void;
   searchQuery: string;
@@ -37,6 +39,7 @@ interface SidebarProps {
 }
 
 export default function Sidebar({
+  people: peopleProp,
   activeRoles,
   onToggleRole,
   searchQuery,
@@ -58,6 +61,9 @@ export default function Sidebar({
 }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
 
+  // Use provided people list, fall back to the static constant
+  const people = peopleProp ?? PEOPLE;
+
   // Fall back to computing locally if not provided (e.g. storybook / tests)
   const effectiveOnCallNoms = useMemo(
     () => onCallNoms ?? getOnCallNoms(new Date()),
@@ -66,7 +72,7 @@ export default function Sidebar({
 
   const filteredPeople = useMemo(() => {
     const q = searchQuery.toLowerCase();
-    return PEOPLE.filter((p) => {
+    return people.filter((p) => {
       // On-call persons always shown regardless of role filter (holiday persons too — but greyed)
       const matchesRole =
         activeRoles.has(p.role) ||
@@ -83,11 +89,11 @@ export default function Sidebar({
 
   const countByRole = useMemo(() => {
     const counts: Partial<Record<Role, number>> = {};
-    PEOPLE.forEach((p) => {
+    people.forEach((p) => {
       counts[p.role] = (counts[p.role] ?? 0) + 1;
     });
     return counts;
-  }, []);
+  }, [people]);
 
   return (
     <aside
@@ -111,7 +117,7 @@ export default function Sidebar({
                 Carte des équipes
               </h1>
               <p className="text-xs mt-0.5" style={{ color: "var(--color-text-secondary)" }}>
-                {filteredPeople.length} / {PEOPLE.length} personnes
+                {filteredPeople.length} / {people.length} personnes
               </p>
             </div>
           )}
@@ -204,7 +210,7 @@ export default function Sidebar({
                 En astreinte aujourd&apos;hui
               </p>
               <div className="flex flex-col gap-1 overflow-y-auto" style={{ maxHeight: "200px" }}>
-                {PEOPLE.filter((p) => effectiveOnCallNoms.has(p.nom) && !holidayNoms.has(p.nom)).map((p) => {
+                {people.filter((p) => effectiveOnCallNoms.has(p.nom) && !holidayNoms.has(p.nom)).map((p) => {
                   const color = ROLE_COLORS[p.role];
                   const initials = `${p.prenom[0]}${p.nom.slice(0, 2)}`.toUpperCase();
                   return (

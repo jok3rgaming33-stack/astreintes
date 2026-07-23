@@ -7,6 +7,8 @@ interface EffectifsModalProps {
   open: boolean;
   onClose: () => void;
   onPersonSelect: (person: Person) => void;
+  /** Active people list — from usePeople() hook in parent */
+  people?: Person[];
   onCallNoms: Set<string>;
   holidayNoms: Set<string>;
   onToggleOnCall: (nom: string) => void;
@@ -14,24 +16,30 @@ interface EffectifsModalProps {
   /** Shared "astreintes uniquement" filter (controlled) */
   onlyOnCall: boolean;
   onToggleOnlyOnCall: () => void;
+  /** Opens the resource management modal */
+  onOpenGestion?: () => void;
 }
 
 export default function EffectifsModal({
   open,
   onClose,
   onPersonSelect,
+  people: peopleProp,
   onCallNoms,
   holidayNoms,
   onToggleOnCall,
   onToggleHoliday,
   onlyOnCall,
   onToggleOnlyOnCall,
+  onOpenGestion,
 }: EffectifsModalProps) {
+  // Use provided people list, fall back to the static constant
+  const activePeople = peopleProp ?? PEOPLE;
   const [search, setSearch] = useState("");
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    return PEOPLE.filter((p) => {
+    return activePeople.filter((p) => {
       if (onlyOnCall && !onCallNoms.has(p.nom)) return false;
       return (
         q === "" ||
@@ -40,9 +48,9 @@ export default function EffectifsModal({
         p.ville.toLowerCase().includes(q)
       );
     });
-  }, [search, onlyOnCall, onCallNoms]);
+  }, [search, onlyOnCall, onCallNoms, activePeople]);
 
-  const onCallList = PEOPLE.filter(
+  const onCallList = activePeople.filter(
     (p) => onCallNoms.has(p.nom) && !holidayNoms.has(p.nom)
   );
 
@@ -106,32 +114,54 @@ export default function EffectifsModal({
                 className="text-xs"
                 style={{ color: "var(--color-text-secondary)" }}
               >
-                {PEOPLE.length} personnes · {onCallList.length} en astreinte
+                {activePeople.length} personnes · {onCallList.length} en astreinte
               </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-xl flex items-center justify-center transition-colors hover:bg-white/10"
-            style={{
-              color: "var(--color-text-secondary)",
-              border: "1px solid var(--color-border)",
-            }}
-          >
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+          <div className="flex items-center gap-2">
+            {onOpenGestion && (
+              <button
+                onClick={onOpenGestion}
+                title="Gérer les ressources"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all hover:opacity-80 active:scale-95"
+                style={{
+                  background: "rgba(239,68,68,0.1)",
+                  border: "1px solid rgba(239,68,68,0.25)",
+                  color: "#ef4444",
+                }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <line x1="19" y1="8" x2="19" y2="14"/>
+                  <line x1="22" y1="11" x2="16" y2="11"/>
+                </svg>
+                Gérer
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="w-8 h-8 rounded-xl flex items-center justify-center transition-colors hover:bg-white/10"
+              style={{
+                color: "var(--color-text-secondary)",
+                border: "1px solid var(--color-border)",
+              }}
             >
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         {/* ── Search ─────────────────────────────────────────── */}

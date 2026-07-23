@@ -60,6 +60,8 @@ const NOUVELLE_AQUITAINE_DEPTS = new Set([
 ]);
 
 interface MapComponentProps {
+  /** Active people list — from usePeople() hook in parent */
+  people?: Person[];
   activeRoles: Set<Role>;
   searchQuery: string;
   onPersonSelect: (person: Person | null) => void;
@@ -81,6 +83,7 @@ interface MapComponentProps {
 }
 
 export default function MapComponent({
+  people: peopleProp,
   activeRoles,
   searchQuery,
   onPersonSelect,
@@ -94,6 +97,9 @@ export default function MapComponent({
   onIncidentClick,
   onlyOnCall = false,
 }: MapComponentProps) {
+  // Use provided people list, fall back to the static constant
+  const people = peopleProp ?? PEOPLE;
+
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<Map<Person, L.Marker>>(new Map());
   const incidentMarkersRef = useRef<Map<string, L.Marker>>(new Map());
@@ -194,7 +200,7 @@ export default function MapComponent({
       });
 
     // Create markers for all people (initial render — no on-call highlight yet)
-    PEOPLE.forEach((person) => {
+    people.forEach((person) => {
       const icon = buildPersonIcon(person, false);
       const marker = L.marker([person.lat, person.lng], { icon })
         .addTo(map)
@@ -211,6 +217,34 @@ export default function MapComponent({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Sync markers when people list changes (add/remove resources)
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    // Remove markers for people no longer in the list
+    markersRef.current.forEach((marker, person) => {
+      if (!people.includes(person)) {
+        marker.removeFrom(map);
+        markersRef.current.delete(person);
+      }
+    });
+
+    // Add markers for newly added people
+    people.forEach((person) => {
+      if (!markersRef.current.has(person)) {
+        const isHoliday = false;
+        const isOnCall = onCallNoms.has(person.nom);
+        const icon = buildPersonIcon(person, isOnCall, false, isHoliday);
+        const marker = L.marker([person.lat, person.lng], { icon })
+          .addTo(map)
+          .on("click", () => onPersonSelect(person));
+        markersRef.current.set(person, marker);
+      }
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [people]);
 
   // Refresh marker icons + z-order when on-call, proximity or holiday sets change
   useEffect(() => {
@@ -232,7 +266,7 @@ export default function MapComponent({
 
     const q = searchQuery.toLowerCase();
 
-    PEOPLE.forEach((person) => {
+    people.forEach((person) => {
       const marker = markersRef.current.get(person);
       if (!marker) return;
 
@@ -255,7 +289,7 @@ export default function MapComponent({
         if (map.hasLayer(marker)) marker.removeFrom(map);
       }
     });
-  }, [activeRoles, searchQuery, onCallNoms, routeResultPersons, onlyOnCall]);
+  }, [people, activeRoles, searchQuery, onCallNoms, routeResultPersons, onlyOnCall]);
 
   // Toggle crosshair cursor and map click handler for place-incident mode
   useEffect(() => {
