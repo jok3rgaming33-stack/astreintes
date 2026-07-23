@@ -23,17 +23,20 @@ export default function EffectifsModal({
   onToggleHoliday,
 }: EffectifsModalProps) {
   const [search, setSearch] = useState("");
+  const [onlyOnCall, setOnlyOnCall] = useState(false);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    return PEOPLE.filter(
-      (p) =>
+    return PEOPLE.filter((p) => {
+      if (onlyOnCall && !onCallNoms.has(p.nom)) return false;
+      return (
         q === "" ||
         p.nom.toLowerCase().includes(q) ||
         p.prenom.toLowerCase().includes(q) ||
         p.ville.toLowerCase().includes(q)
-    );
-  }, [search]);
+      );
+    });
+  }, [search, onlyOnCall, onCallNoms]);
 
   const onCallList = PEOPLE.filter(
     (p) => onCallNoms.has(p.nom) && !holidayNoms.has(p.nom)
@@ -161,10 +164,30 @@ export default function EffectifsModal({
               }}
             />
           </div>
+
+          {/* Filter: on-call only */}
+          <button
+            onClick={() => setOnlyOnCall((v) => !v)}
+            className="mt-2 w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-semibold transition-all active:scale-[0.98]"
+            style={{
+              background: onlyOnCall ? "rgba(234,179,8,0.2)" : "var(--color-surface-elevated)",
+              border: `1px solid ${onlyOnCall ? "#eab308" : "var(--color-border)"}`,
+              color: onlyOnCall ? "#eab308" : "var(--color-text-secondary)",
+            }}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill={onlyOnCall ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 8h1a4 4 0 0 1 0 8h-1" />
+              <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" />
+              <line x1="6" y1="1" x2="6" y2="4" />
+              <line x1="10" y1="1" x2="10" y2="4" />
+              <line x1="14" y1="1" x2="14" y2="4" />
+            </svg>
+            {onlyOnCall ? "Afficher tous les effectifs" : "N'afficher que les astreintes"}
+          </button>
         </div>
 
         {/* ── On-call banner ─────────────────────────────────── */}
-        {onCallList.length > 0 && (
+        {onCallList.length > 0 && !onlyOnCall && (
           <div
             className="flex-shrink-0 px-4 py-3"
             style={{
@@ -182,7 +205,7 @@ export default function EffectifsModal({
               />
               En astreinte aujourd&apos;hui
             </p>
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1 overflow-y-auto" style={{ maxHeight: "180px" }}>
               {onCallList.map((p) => {
                 const color = ROLE_COLORS[p.role];
                 const initials = `${p.prenom[0]}${p.nom.slice(0, 2)}`.toUpperCase();

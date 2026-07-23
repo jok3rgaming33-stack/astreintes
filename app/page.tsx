@@ -18,6 +18,7 @@ import {
 } from "@/app/actions/shared-state";
 import NotificationBanner from "@/components/NotificationBanner";
 import EffectifsModal from "@/components/EffectifsModal";
+import UpdateReminderBanner from "@/components/UpdateReminderBanner";
 import {
   sendNotification,
   buildIncidentNotifBody,
@@ -303,6 +304,7 @@ export default function Home() {
 
   return (
     <>
+    <UpdateReminderBanner />
     <NotificationBanner />
     <main className="flex w-full overflow-hidden" style={{ height: "100dvh" }}>
 
