@@ -7,6 +7,10 @@ export interface NetworkIncident {
   lat: number;
   lng: number;
   label: string;
+  /** ISO string — set by the server when the incident is persisted */
+  createdAt?: string;
+  /** Nom + prénom of the user who added the incident */
+  addedBy?: string;
 }
 
 interface AddressSearchProps {

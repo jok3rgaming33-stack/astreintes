@@ -43,11 +43,20 @@ async function requireManager() {
 
 export async function getIncidents() {
   const u = await requireAuth();
-  return db
+  const rows = await db
     .select()
     .from(incidents)
     .where(eq(incidents.zoneId, u.zoneId))
     .orderBy(incidents.createdAt);
+  // Return fields needed by NetworkIncident (createdAt as ISO string, addedBy)
+  return rows.map((r) => ({
+    id: r.id,
+    label: r.label,
+    lat: r.lat,
+    lng: r.lng,
+    addedBy: r.addedBy ?? "Inconnu",
+    createdAt: r.createdAt?.toISOString() ?? new Date().toISOString(),
+  }));
 }
 
 export async function addIncident(incident: {
@@ -57,9 +66,11 @@ export async function addIncident(incident: {
   lng: number;
 }) {
   const u = await requireAuth();
+  // Build display name: "Prénom NOM" from session name or nom fallback
+  const addedBy = u.name ?? (u.nom ? u.nom : "Inconnu");
   await db
     .insert(incidents)
-    .values({ ...incident, zoneId: u.zoneId })
+    .values({ ...incident, zoneId: u.zoneId, addedBy })
     .onConflictDoNothing();
 }
 

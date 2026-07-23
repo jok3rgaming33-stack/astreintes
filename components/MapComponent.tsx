@@ -355,12 +355,37 @@ export default function MapComponent({
 
       const shortLabel = incident.label.split(",").slice(0, 2).join(",");
 
+      // Format createdAt as "DD/MM/YYYY à HH:MM"
+      const createdAtStr = incident.createdAt
+        ? (() => {
+            const d = new Date(incident.createdAt);
+            const date = d.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" });
+            const time = d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+            return `${date} à ${time}`;
+          })()
+        : null;
+
+      const addedByStr = incident.addedBy ?? null;
+
+      const metaLine = [
+        addedByStr ? `<span style="color:#f8fafc;">Par&nbsp;: <strong>${addedByStr}</strong></span>` : null,
+        createdAtStr ? `<span style="color:#94a3b8;">Le&nbsp;${createdAtStr}</span>` : null,
+      ]
+        .filter(Boolean)
+        .join("<br/>");
+
       const marker = L.marker([incident.lat, incident.lng], { icon, zIndexOffset: 2000 })
         .addTo(map)
         .bindPopup(
-          `<div style="font-size:12px;font-weight:600;color:#ef4444;margin-bottom:4px;">Panne réseau signalée</div>
-           <div style="font-size:11px;color:#94a3b8;">${shortLabel}</div>`,
-          { maxWidth: 240 }
+          `<div style="min-width:180px;">
+             <div style="font-size:12px;font-weight:700;color:#ef4444;margin-bottom:6px;display:flex;align-items:center;gap:5px;">
+               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+               Panne r&eacute;seau signal&eacute;e
+             </div>
+             <div style="font-size:11px;color:#94a3b8;margin-bottom:${metaLine ? "8px" : "0"};">${shortLabel}</div>
+             ${metaLine ? `<div style="font-size:11px;line-height:1.7;border-top:1px solid rgba(148,163,184,0.2);padding-top:6px;">${metaLine}</div>` : ""}
+           </div>`,
+          { maxWidth: 260 }
         )
         .on("click", () => {
           onIncidentClickRef.current?.(incident);

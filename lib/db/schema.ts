@@ -95,6 +95,7 @@ export const incidents = pgTable("incidents", {
   label: text("label").notNull(),
   lat: doublePrecision("lat").notNull(),
   lng: doublePrecision("lng").notNull(),
+  addedBy: text("added_by"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
