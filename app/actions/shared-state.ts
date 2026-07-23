@@ -146,3 +146,20 @@ export async function deleteRemovedKey(key: string) {
   await requireManager();
   await db.delete(removedPeople).where(eq(removedPeople.key, key));
 }
+
+export async function updatePersonProfile(
+  id: string,
+  updates: { role?: string; ville?: string; codePostal?: string; lat?: number; lng?: number }
+) {
+  await requireManager();
+  await db
+    .update(customPeople)
+    .set({
+      ...(updates.role !== undefined && { role: updates.role }),
+      ...(updates.ville !== undefined && { ville: updates.ville }),
+      ...(updates.codePostal !== undefined && { codePostal: updates.codePostal }),
+      ...(updates.lat !== undefined && { lat: updates.lat }),
+      ...(updates.lng !== undefined && { lng: updates.lng }),
+    })
+    .where(eq(customPeople.id, id));
+}

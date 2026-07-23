@@ -10,6 +10,7 @@ import {
   deleteCustomPerson,
   addRemovedKey,
   deleteRemovedKey,
+  updatePersonProfile,
 } from "@/app/actions/shared-state";
 
 const POLL_INTERVAL_MS = 5000;
@@ -121,11 +122,32 @@ export function usePeople() {
     [customPeople]
   );
 
+  /** Update a custom person's role and/or address — persisted in DB */
+  const updatePerson = useCallback(
+    async (
+      person: Person,
+      updates: { role?: Person["role"]; ville?: string; codePostal?: string; lat?: number; lng?: number }
+    ) => {
+      if (!person.id) return; // base PEOPLE cannot be updated via DB
+      await mutateCustom(
+        async (prev = []) => {
+          await updatePersonProfile(person.id!, updates);
+          return prev.map((p) =>
+            p.id === person.id ? { ...p, ...updates } : p
+          );
+        },
+        { revalidate: true }
+      );
+    },
+    [mutateCustom]
+  );
+
   return {
     people,
     addPerson,
     removePerson,
     restorePerson,
+    updatePerson,
     isRemoved,
     isCustom,
     customPeople,

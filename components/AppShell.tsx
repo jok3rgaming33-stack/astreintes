@@ -64,7 +64,7 @@ export default function AppShell({
   const [gestionModalOpen, setGestionModalOpen] = useState(false);
 
   // People management — extends base PEOPLE with adds/removes stored in localStorage
-  const { people, addPerson, removePerson, restorePerson, isRemoved, isCustom } = usePeople();
+  const { people, addPerson, removePerson, restorePerson, updatePerson, isRemoved, isCustom } = usePeople();
   // When true: show only on-call people (in the sidebar list, the modal, and on the map)
   const [onlyOnCall, setOnlyOnCall] = useState(false);
   const handleToggleOnlyOnCall = useCallback(() => setOnlyOnCall((v) => !v), []);
@@ -673,6 +673,7 @@ export default function AppShell({
         onAdd={addPerson}
         onRemove={removePerson}
         onRestore={restorePerson}
+        onUpdate={updatePerson}
         isRemoved={isRemoved}
         isCustom={isCustom}
       />}
