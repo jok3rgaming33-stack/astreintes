@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { incidents, personStatus, customPeople, removedPeople } from "@/lib/db/schema";
+import { incidents, personStatus, customPeople, removedPeople, user } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
@@ -152,6 +152,8 @@ export async function updatePersonProfile(
   updates: { role?: string; ville?: string; codePostal?: string; lat?: number; lng?: number }
 ) {
   await requireManager();
+
+  // 1 — Update the display profile in custom_people
   await db
     .update(customPeople)
     .set({
@@ -162,4 +164,21 @@ export async function updatePersonProfile(
       ...(updates.lng !== undefined && { lng: updates.lng }),
     })
     .where(eq(customPeople.id, id));
+
+  // 2 — If the role changed, propagate it to user.role (access rights)
+  //     The link is custom_people.nom ↔ user.nom
+  if (updates.role !== undefined) {
+    const [profile] = await db
+      .select({ nom: customPeople.nom })
+      .from(customPeople)
+      .where(eq(customPeople.id, id))
+      .limit(1);
+
+    if (profile?.nom) {
+      await db
+        .update(user)
+        .set({ role: updates.role, updatedAt: new Date() })
+        .where(eq(user.nom, profile.nom));
+    }
+  }
 }
