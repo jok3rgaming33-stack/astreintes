@@ -46,7 +46,14 @@ const MapComponent = dynamic(() => import("@/components/MapComponent"), {
 const ALL_ROLES: Role[] = ["CIR", "REF", "TMF", "TMRa", "TMRe"];
 const POLL_INTERVAL_MS = 5000;
 
-export default function AppShell({ canManageRessources = false }: { canManageRessources?: boolean }) {
+export default function AppShell({
+  canManageRessources = false,
+  currentUserNom = null,
+}: {
+  canManageRessources?: boolean;
+  /** nom as stored in lib/people.ts — null for CIR/Référents (they can edit all) */
+  currentUserNom?: string | null;
+}) {
   const [activeRoles, setActiveRoles] = useState<Set<Role>>(new Set(ALL_ROLES));
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
@@ -156,6 +163,8 @@ export default function AppShell({ canManageRessources = false }: { canManageRes
   // ── Handlers ───────────────────────────────────────────────────────────
 
   const handleToggleOnCall = useCallback(async (nom: string) => {
+    // Non-managers can only toggle their own status
+    if (!canManageRessources && currentUserNom && nom !== currentUserNom) return;
     setOnCallNoms((prev) => {
       const next = new Set(prev);
       const nowOnCall = !prev.has(nom);
@@ -163,9 +172,11 @@ export default function AppShell({ canManageRessources = false }: { canManageRes
       upsertPersonStatus(nom, { isOnCall: nowOnCall }).catch(() => {});
       return next;
     });
-  }, []);
+  }, [canManageRessources, currentUserNom]);
 
   const handleToggleHoliday = useCallback(async (nom: string) => {
+    // Non-managers can only toggle their own status
+    if (!canManageRessources && currentUserNom && nom !== currentUserNom) return;
     setHolidayNoms((prev) => {
       const next = new Set(prev);
       const nowHoliday = !prev.has(nom);
@@ -183,7 +194,7 @@ export default function AppShell({ canManageRessources = false }: { canManageRes
       }
       return next;
     });
-  }, []);
+  }, [canManageRessources, currentUserNom]);
 
   const handleToggleRole = useCallback((role: Role) => {
     setActiveRoles((prev) => {
@@ -337,6 +348,8 @@ export default function AppShell({ canManageRessources = false }: { canManageRes
           holidayNoms={holidayNoms}
           onToggleOnCall={handleToggleOnCall}
           onToggleHoliday={handleToggleHoliday}
+          currentUserNom={currentUserNom}
+          canManageRessources={canManageRessources}
           hidePersonList
           onOpenEffectifs={() => setEffectifsModalOpen(true)}
           onlyOnCall={onlyOnCall}
@@ -616,6 +629,8 @@ export default function AppShell({ canManageRessources = false }: { canManageRes
                 holidayNoms={holidayNoms}
                 onToggleOnCall={handleToggleOnCall}
                 onToggleHoliday={handleToggleHoliday}
+                currentUserNom={currentUserNom}
+                canManageRessources={canManageRessources}
                 mobileSheet
                 hidePersonList
                 onOpenEffectifs={() => {
@@ -643,6 +658,8 @@ export default function AppShell({ canManageRessources = false }: { canManageRes
         holidayNoms={holidayNoms}
         onToggleOnCall={handleToggleOnCall}
         onToggleHoliday={handleToggleHoliday}
+        currentUserNom={currentUserNom}
+        canManageRessources={canManageRessources}
         onlyOnCall={onlyOnCall}
         onToggleOnlyOnCall={handleToggleOnlyOnCall}
         onOpenGestion={canManageRessources ? () => { setEffectifsModalOpen(false); setGestionModalOpen(true); } : undefined}

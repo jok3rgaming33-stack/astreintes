@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import type { Person } from "@/lib/people";
+import { EMAIL_TO_NOM } from "@/lib/emailToNom";
 
 // ── Auth helpers ───────────────────────────────────────────────────────────
 
@@ -60,7 +61,18 @@ export async function upsertPersonStatus(
   nom: string,
   updates: { isOnCall?: boolean; isHoliday?: boolean }
 ) {
-  await requireAuth();
+  const sessionUser = await requireAuth();
+  const sessionRole = (sessionUser as { role?: string }).role ?? "user";
+  const isManager = sessionRole === "CIR" || sessionRole === "Référent";
+
+  // Non-managers can only update their own status
+  if (!isManager) {
+    const email = sessionUser.email.toLowerCase();
+    const ownNom = EMAIL_TO_NOM[email] ?? null;
+    if (!ownNom || ownNom !== nom) {
+      throw new Error("Forbidden: you can only update your own status");
+    }
+  }
   await db
     .insert(personStatus)
     .values({

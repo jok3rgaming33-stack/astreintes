@@ -36,6 +36,10 @@ interface SidebarProps {
   /** Shared "astreintes uniquement" filter — also hides non-on-call people on the map */
   onlyOnCall?: boolean;
   onToggleOnlyOnCall?: () => void;
+  /** nom of the currently logged-in user (from lib/people.ts). null = manager */
+  currentUserNom?: string | null;
+  /** Whether the logged-in user can modify all statuses */
+  canManageRessources?: boolean;
 }
 
 export default function Sidebar({
@@ -58,6 +62,8 @@ export default function Sidebar({
   onToggleHoliday,
   onlyOnCall = false,
   onToggleOnlyOnCall,
+  currentUserNom = null,
+  canManageRessources = false,
 }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
 
@@ -423,43 +429,66 @@ export default function Sidebar({
                       </button>
 
                       {/* Astreinte toggle */}
-                      <button
-                        onClick={() => onToggleOnCall?.(person.nom)}
-                        disabled={isHoliday}
-                        title={isOnCall ? "Retirer de l'astreinte" : "Mettre en astreinte"}
-                        className="flex-shrink-0 w-7 h-7 rounded-md flex items-center justify-center transition-colors"
-                        style={{
-                          background: isOnCall ? "rgba(16,185,129,0.2)" : "var(--color-surface-elevated)",
-                          border: `1px solid ${isOnCall ? "#10b981" : "var(--color-border)"}`,
-                          color: isOnCall ? "#10b981" : "var(--color-text-secondary)",
-                          opacity: isHoliday ? 0.3 : 1,
-                          cursor: isHoliday ? "not-allowed" : "pointer",
-                        }}
-                      >
-                        {/* Gyrophare bleu — astreinte */}
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill={isOnCall ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M12 2a6 6 0 0 1 6 6c0 3-2 5-3 7H9c-1-2-3-4-3-7a6 6 0 0 1 6-6z" />
-                          <line x1="12" y1="2" x2="12" y2="0" />
-                          <line x1="4.22" y1="4.22" x2="2.81" y2="2.81" />
-                          <line x1="19.78" y1="4.22" x2="21.19" y2="2.81" />
-                          <rect x="9" y="15" width="6" height="2" rx="1" />
-                          <rect x="10" y="17" width="4" height="2" rx="1" />
-                        </svg>
-                      </button>
+                      {(() => {
+                        const isOwnProfile = !currentUserNom || person.nom === currentUserNom;
+                        const canToggle = canManageRessources || isOwnProfile;
+                        return (
+                          <button
+                            onClick={() => canToggle && onToggleOnCall?.(person.nom)}
+                            disabled={isHoliday || !canToggle}
+                            title={
+                              !canToggle
+                                ? "Vous ne pouvez modifier que votre propre statut"
+                                : isOnCall ? "Retirer de l'astreinte" : "Mettre en astreinte"
+                            }
+                            className="flex-shrink-0 w-7 h-7 rounded-md flex items-center justify-center transition-colors"
+                            style={{
+                              background: isOnCall ? "rgba(16,185,129,0.2)" : "var(--color-surface-elevated)",
+                              border: `1px solid ${isOnCall ? "#10b981" : "var(--color-border)"}`,
+                              color: isOnCall ? "#10b981" : "var(--color-text-secondary)",
+                              opacity: (isHoliday || !canToggle) ? 0.3 : 1,
+                              cursor: (isHoliday || !canToggle) ? "not-allowed" : "pointer",
+                            }}
+                          >
+                            {/* Gyrophare bleu — astreinte */}
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill={isOnCall ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M12 2a6 6 0 0 1 6 6c0 3-2 5-3 7H9c-1-2-3-4-3-7a6 6 0 0 1 6-6z" />
+                              <line x1="12" y1="2" x2="12" y2="0" />
+                              <line x1="4.22" y1="4.22" x2="2.81" y2="2.81" />
+                              <line x1="19.78" y1="4.22" x2="21.19" y2="2.81" />
+                              <rect x="9" y="15" width="6" height="2" rx="1" />
+                              <rect x="10" y="17" width="4" height="2" rx="1" />
+                            </svg>
+                          </button>
+                        );
+                      })()}
 
                       {/* Vacances toggle */}
-                      <button
-                        onClick={() => onToggleHoliday?.(person.nom)}
-                        title={isHoliday ? "Retirer les vacances" : "Marquer en vacances"}
-                        className="flex-shrink-0 w-7 h-7 rounded-md flex items-center justify-center transition-colors text-sm"
-                        style={{
-                          background: isHoliday ? "rgba(107,114,128,0.25)" : "var(--color-surface-elevated)",
-                          border: `1px solid ${isHoliday ? "#9ca3af" : "var(--color-border)"}`,
-                          color: isHoliday ? "#d1d5db" : "var(--color-text-secondary)",
-                        }}
-                      >
-                        🌴
-                      </button>
+                      {(() => {
+                        const isOwnProfile = !currentUserNom || person.nom === currentUserNom;
+                        const canToggle = canManageRessources || isOwnProfile;
+                        return (
+                          <button
+                            onClick={() => canToggle && onToggleHoliday?.(person.nom)}
+                            disabled={!canToggle}
+                            title={
+                              !canToggle
+                                ? "Vous ne pouvez modifier que votre propre statut"
+                                : isHoliday ? "Retirer les vacances" : "Marquer en vacances"
+                            }
+                            className="flex-shrink-0 w-7 h-7 rounded-md flex items-center justify-center transition-colors text-sm"
+                            style={{
+                              background: isHoliday ? "rgba(107,114,128,0.25)" : "var(--color-surface-elevated)",
+                              border: `1px solid ${isHoliday ? "#9ca3af" : "var(--color-border)"}`,
+                              color: isHoliday ? "#d1d5db" : "var(--color-text-secondary)",
+                              opacity: !canToggle ? 0.3 : 1,
+                              cursor: !canToggle ? "not-allowed" : "pointer",
+                            }}
+                          >
+                            🌴
+                          </button>
+                        );
+                      })()}
                     </div>
                   );
                 })}

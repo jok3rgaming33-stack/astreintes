@@ -13,9 +13,14 @@ export default async function Home() {
   // ── Role sync ──────────────────────────────────────────────────────────────
   // Ensures the role column is populated from the email→role lookup table
   // the first time a user logs in (Better Auth sets role to "user" by default).
-  const role = await syncUserRole();
+  const { role, nom } = await syncUserRole();
 
   const canManageRessources = isPrivilegedRole(role);
 
-  return <AppShell canManageRessources={canManageRessources} />;
+  return (
+    <AppShell
+      canManageRessources={canManageRessources}
+      currentUserNom={nom}
+    />
+  );
 }
