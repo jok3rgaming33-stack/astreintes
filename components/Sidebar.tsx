@@ -31,6 +31,9 @@ interface SidebarProps {
   onToggleOnCall?: (nom: string) => void;
   /** Toggle a person into/out of the holiday set */
   onToggleHoliday?: (nom: string) => void;
+  /** Shared "astreintes uniquement" filter — also hides non-on-call people on the map */
+  onlyOnCall?: boolean;
+  onToggleOnlyOnCall?: () => void;
 }
 
 export default function Sidebar({
@@ -50,6 +53,8 @@ export default function Sidebar({
   holidayNoms = new Set(),
   onToggleOnCall,
   onToggleHoliday,
+  onlyOnCall = false,
+  onToggleOnlyOnCall,
 }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
 
@@ -160,7 +165,33 @@ export default function Sidebar({
                 }}
               />
             </div>
+
+            {/* Astreintes-only filter — also hides non-on-call people on the map */}
+            {onToggleOnlyOnCall && (
+              <button
+                onClick={onToggleOnlyOnCall}
+                className="mt-2 w-full flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-semibold transition-all active:scale-[0.98]"
+                style={{
+                  background: onlyOnCall ? "rgba(234,179,8,0.2)" : "var(--color-surface-elevated)",
+                  border: `1px solid ${onlyOnCall ? "#eab308" : "var(--color-border)"}`,
+                  color: onlyOnCall ? "#eab308" : "var(--color-text-secondary)",
+                }}
+                title="Filtre appliqué à la liste et à la carte"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill={onlyOnCall ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 8h1a4 4 0 0 1 0 8h-1" />
+                  <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" />
+                  <line x1="6" y1="1" x2="6" y2="4" />
+                  <line x1="10" y1="1" x2="10" y2="4" />
+                  <line x1="14" y1="1" x2="14" y2="4" />
+                </svg>
+                {onlyOnCall ? "Afficher tous les effectifs" : "N'afficher que les astreintes"}
+              </button>
+            )}
           </div>
+
+          {/* Scrollable content — prevents the sidebar from freezing when many on-call */}
+          <div className="flex-1 overflow-y-auto min-h-0">
 
           {/* On-call banner */}
           {effectiveOnCallNoms.size > 0 && (
@@ -172,7 +203,7 @@ export default function Sidebar({
                 />
                 En astreinte aujourd&apos;hui
               </p>
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-1 overflow-y-auto" style={{ maxHeight: "200px" }}>
                 {PEOPLE.filter((p) => effectiveOnCallNoms.has(p.nom) && !holidayNoms.has(p.nom)).map((p) => {
                   const color = ROLE_COLORS[p.role];
                   const initials = `${p.prenom[0]}${p.nom.slice(0, 2)}`.toUpperCase();
@@ -427,6 +458,7 @@ export default function Sidebar({
               </div>
             )}
           </div>}
+          </div>
         </>
       )}
     </aside>

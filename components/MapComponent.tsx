@@ -76,6 +76,8 @@ interface MapComponentProps {
   onMapClick?: (lat: number, lng: number) => void;
   /** Called when the user clicks an existing incident marker */
   onIncidentClick?: (incident: NetworkIncident) => void;
+  /** When true, only on-call people are shown on the map */
+  onlyOnCall?: boolean;
 }
 
 export default function MapComponent({
@@ -90,6 +92,7 @@ export default function MapComponent({
   clickToPlaceMode = false,
   onMapClick,
   onIncidentClick,
+  onlyOnCall = false,
 }: MapComponentProps) {
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<Map<Person, L.Marker>>(new Map());
@@ -243,13 +246,16 @@ export default function MapComponent({
         person.prenom.toLowerCase().includes(q) ||
         person.ville.toLowerCase().includes(q);
 
-      if (matchesRole && matchesSearch) {
+      // When "astreintes uniquement" is active, only on-call people are shown
+      const passesOnlyOnCall = !onlyOnCall || isOnCall;
+
+      if (matchesRole && matchesSearch && passesOnlyOnCall) {
         if (!map.hasLayer(marker)) marker.addTo(map);
       } else {
         if (map.hasLayer(marker)) marker.removeFrom(map);
       }
     });
-  }, [activeRoles, searchQuery, onCallNoms, routeResultPersons]);
+  }, [activeRoles, searchQuery, onCallNoms, routeResultPersons, onlyOnCall]);
 
   // Toggle crosshair cursor and map click handler for place-incident mode
   useEffect(() => {

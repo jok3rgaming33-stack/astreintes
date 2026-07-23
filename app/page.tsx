@@ -53,6 +53,9 @@ export default function Home() {
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
   const [incidentModalOpen, setIncidentModalOpen] = useState(false);
   const [effectifsModalOpen, setEffectifsModalOpen] = useState(false);
+  // When true: show only on-call people (in the sidebar list, the modal, and on the map)
+  const [onlyOnCall, setOnlyOnCall] = useState(false);
+  const handleToggleOnlyOnCall = useCallback(() => setOnlyOnCall((v) => !v), []);
 
   // On-call: seeded from the daily schedule, overrideable via DB
   const [onCallNoms, setOnCallNoms] = useState<Set<string>>(() => getOnCallNoms(new Date()));
@@ -326,6 +329,8 @@ export default function Home() {
           onToggleHoliday={handleToggleHoliday}
           hidePersonList
           onOpenEffectifs={() => setEffectifsModalOpen(true)}
+          onlyOnCall={onlyOnCall}
+          onToggleOnlyOnCall={handleToggleOnlyOnCall}
         />
       </div>
 
@@ -343,6 +348,7 @@ export default function Home() {
           clickToPlaceMode={clickToPlaceMode}
           onMapClick={handleMapClick}
           onIncidentClick={handleIncidentClick}
+          onlyOnCall={onlyOnCall}
         />
 
         {/* Signaler une panne button — opens choice modal */}
@@ -604,6 +610,8 @@ export default function Home() {
                   setMobileSheetOpen(false);
                   setEffectifsModalOpen(true);
                 }}
+                onlyOnCall={onlyOnCall}
+                onToggleOnlyOnCall={handleToggleOnlyOnCall}
               />
             </div>
           </div>
@@ -621,6 +629,8 @@ export default function Home() {
         holidayNoms={holidayNoms}
         onToggleOnCall={handleToggleOnCall}
         onToggleHoliday={handleToggleHoliday}
+        onlyOnCall={onlyOnCall}
+        onToggleOnlyOnCall={handleToggleOnlyOnCall}
       />
 
     </main>

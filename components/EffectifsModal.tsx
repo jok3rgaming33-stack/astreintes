@@ -11,6 +11,9 @@ interface EffectifsModalProps {
   holidayNoms: Set<string>;
   onToggleOnCall: (nom: string) => void;
   onToggleHoliday: (nom: string) => void;
+  /** Shared "astreintes uniquement" filter (controlled) */
+  onlyOnCall: boolean;
+  onToggleOnlyOnCall: () => void;
 }
 
 export default function EffectifsModal({
@@ -21,9 +24,10 @@ export default function EffectifsModal({
   holidayNoms,
   onToggleOnCall,
   onToggleHoliday,
+  onlyOnCall,
+  onToggleOnlyOnCall,
 }: EffectifsModalProps) {
   const [search, setSearch] = useState("");
-  const [onlyOnCall, setOnlyOnCall] = useState(false);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
@@ -167,7 +171,7 @@ export default function EffectifsModal({
 
           {/* Filter: on-call only */}
           <button
-            onClick={() => setOnlyOnCall((v) => !v)}
+            onClick={onToggleOnlyOnCall}
             className="mt-2 w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-semibold transition-all active:scale-[0.98]"
             style={{
               background: onlyOnCall ? "rgba(234,179,8,0.2)" : "var(--color-surface-elevated)",
