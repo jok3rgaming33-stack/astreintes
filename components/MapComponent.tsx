@@ -34,7 +34,8 @@ function buildPersonIcon(
   } else if (isOnCall) {
     // Yellow + pulsing — handled by CSS class, inline ring just for fallback
     ring = ``;
-    badge = `<span style="position:absolute;top:-5px;right:-5px;width:12px;height:12px;border-radius:50%;background:#eab308;border:2px solid #111827;display:flex;align-items:center;justify-content:center;font-size:7px;color:#111827;font-weight:900;">!</span>`;
+    // Gyrophare bleu — astreinte
+    badge = `<span style="position:absolute;top:-6px;right:-6px;width:14px;height:14px;border-radius:50%;background:#1d4ed8;border:2px solid #111827;display:flex;align-items:center;justify-content:center;"><svg viewBox='0 0 24 24' width='8' height='8' fill='white' stroke='white' stroke-width='1'><path d='M12 3a5 5 0 0 1 5 5c0 2.5-1.5 4-2.5 6h-5C8.5 12 7 10.5 7 8a5 5 0 0 1 5-5z'/><rect x='9.5' y='14' width='5' height='1.5' rx='0.5'/><rect x='10' y='15.5' width='4' height='1.5' rx='0.5'/></svg></span>`;
   } else if (isProximity) {
     ring = `box-shadow:0 0 0 3px #06b6d4,0 0 8px 3px rgba(6,182,212,0.45);`;
     badge = `<span style="position:absolute;top:-5px;right:-5px;width:12px;height:12px;border-radius:50%;background:#06b6d4;border:2px solid #111827;display:flex;align-items:center;justify-content:center;font-size:8px;color:#111827;font-weight:900;">⏱</span>`;

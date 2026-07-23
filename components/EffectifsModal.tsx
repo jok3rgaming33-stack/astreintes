@@ -386,11 +386,13 @@ export default function EffectifsModal({
                         strokeLinecap="round"
                         strokeLinejoin="round"
                       >
-                        <path d="M18 8h1a4 4 0 0 1 0 8h-1" />
-                        <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" />
-                        <line x1="6" y1="1" x2="6" y2="4" />
-                        <line x1="10" y1="1" x2="10" y2="4" />
-                        <line x1="14" y1="1" x2="14" y2="4" />
+                        {/* Gyrophare bleu — astreinte */}
+                        <path d="M12 2a6 6 0 0 1 6 6c0 3-2 5-3 7H9c-1-2-3-4-3-7a6 6 0 0 1 6-6z" />
+                        <line x1="12" y1="2" x2="12" y2="0" />
+                        <line x1="4.22" y1="4.22" x2="2.81" y2="2.81" />
+                        <line x1="19.78" y1="4.22" x2="21.19" y2="2.81" />
+                        <rect x="9" y="15" width="6" height="2" rx="1" />
+                        <rect x="10" y="17" width="4" height="2" rx="1" />
                       </svg>
                     </button>
 

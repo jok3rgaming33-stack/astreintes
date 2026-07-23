@@ -79,7 +79,7 @@ export const PEOPLE: Person[] = [
   // TMRe
   { nom: "BARBIER",        prenom: "Emilie",     codePostal: "19274", ville: "Ussac",                       role: "TMRe", lat: 45.2833, lng: 1.5000 },
   { nom: "BLOT",           prenom: "Félix Armand",codePostal:"23096", ville: "Guéret",                      role: "TMRe", lat: 46.1667, lng: 1.8667 },
-  { nom: "BONARDEL RICHARD",prenom:"Melanie",    codePostal: "33056", ville: "Blanquefort",                 role: "TMRe", lat: 44.9167, lng: -0.6333 },
+  { nom: "BONARDEL RICHARD",prenom:"Melanie",    codePostal: "33290", ville: "Le Pian-Médoc",               role: "TMRe", lat: 45.0022, lng: -0.7156 },
   { nom: "CAUDRON",        prenom: "Cédric",     codePostal: "19153", ville: "Objat",                       role: "TMRe", lat: 45.2667, lng: 1.4000 },
   { nom: "DESVAUD",        prenom: "David",      codePostal: "16154", ville: "Gond-Pontouvre",              role: "TMRe", lat: 45.6667, lng: 0.1667 },
   { nom: "GHAI OUT",       prenom: "Abdelkader", codePostal: "19274", ville: "Ussac",                       role: "TMRe", lat: 45.2950, lng: 1.5100 },
@@ -94,7 +94,7 @@ export const PEOPLE: Person[] = [
   { nom: "MONNIN",         prenom: "Christophe", codePostal: "33191", ville: "Gours",                       role: "TMRe", lat: 45.0500, lng: -0.0167 },
   { nom: "ORSEAU",         prenom: "Paul",       codePostal: "79009", ville: "Amuré",                       role: "TMRe", lat: 46.4833, lng: -0.5000 },
   { nom: "PORCA",          prenom: "Kévin",      codePostal: "79116", ville: "Faye-l'Abbesse",              role: "TMRe", lat: 46.9000, lng: -0.3333 },
-  { nom: "PREVOT",         prenom: "Jean-Marie", codePostal: "33494", ville: "Salaunes",                    role: "TMRe", lat: 44.9500, lng: -0.8000 },
+  { nom: "PREVOT",         prenom: "Jean-Marie", codePostal: "33980", ville: "Audenge",                     role: "TMRe", lat: 44.6833, lng: -1.0167 },
   { nom: "REYNOLDS",       prenom: "Stephen",    codePostal: "33527", ville: "Le Teich",                    role: "TMRe", lat: 44.6333, lng: -1.0167 },
   { nom: "ROUZIER",        prenom: "Nicolas",    codePostal: "86213", ville: "Rouillé",                     role: "TMRe", lat: 46.4000, lng: 0.0833 },
   { nom: "SELICHAR",       prenom: "Vivien",     codePostal: "17228", ville: "Médis",                       role: "TMRe", lat: 45.6833, lng: -0.9000 },
