@@ -79,7 +79,7 @@ export const PEOPLE: Person[] = [
   // TMRe
   { nom: "BARBIER",        prenom: "Emilie",     codePostal: "19274", ville: "Ussac",                       role: "TMRe", lat: 45.2833, lng: 1.5000 },
   { nom: "BLOT",           prenom: "Félix Armand",codePostal:"23096", ville: "Guéret",                      role: "TMRe", lat: 46.1667, lng: 1.8667 },
-  { nom: "BONARDEL RICHARD",prenom:"Melanie",    codePostal: "33290", ville: "Le Pian-Médoc",               role: "TMRe", lat: 45.0022, lng: -0.7156 },
+  { nom: "BONARDEL RICHARD",prenom:"Melanie",    codePostal: "33290", ville: "Le Pian-Médoc",               role: "TMRe", lat: 44.95515647031016, lng: -0.6702164402435107 },
   { nom: "CAUDRON",        prenom: "Cédric",     codePostal: "19153", ville: "Objat",                       role: "TMRe", lat: 45.2667, lng: 1.4000 },
   { nom: "DESVAUD",        prenom: "David",      codePostal: "16154", ville: "Gond-Pontouvre",              role: "TMRe", lat: 45.6667, lng: 0.1667 },
   { nom: "GHAI OUT",       prenom: "Abdelkader", codePostal: "19274", ville: "Ussac",                       role: "TMRe", lat: 45.2950, lng: 1.5100 },
