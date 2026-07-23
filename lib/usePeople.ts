@@ -1,91 +1,116 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import useSWR from "swr";
+import { useCallback } from "react";
 import { PEOPLE, type Person } from "@/lib/people";
+import {
+  getCustomPeople,
+  getRemovedKeys,
+  addCustomPerson,
+  deleteCustomPerson,
+  addRemovedKey,
+  deleteRemovedKey,
+} from "@/app/actions/shared-state";
 
-const STORAGE_KEY_CUSTOM = "astreintes_custom_people";
-const STORAGE_KEY_REMOVED = "astreintes_removed_noms";
+const POLL_INTERVAL_MS = 5000;
 
-function loadCustom(): Person[] {
-  if (typeof window === "undefined") return [];
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY_CUSTOM) ?? "[]");
-  } catch {
-    return [];
-  }
-}
-
-function loadRemoved(): Set<string> {
-  if (typeof window === "undefined") return new Set();
-  try {
-    return new Set(JSON.parse(localStorage.getItem(STORAGE_KEY_REMOVED) ?? "[]"));
-  } catch {
-    return new Set();
-  }
-}
+// SWR fetchers (server actions are async functions — usable directly)
+const fetchCustom = () => getCustomPeople();
+const fetchRemoved = () => getRemovedKeys();
 
 export function usePeople() {
-  const [customPeople, setCustomPeople] = useState<Person[]>([]);
-  const [removedNoms, setRemovedNoms] = useState<Set<string>>(new Set());
+  const {
+    data: customPeople = [],
+    mutate: mutateCustom,
+  } = useSWR("custom-people", fetchCustom, {
+    refreshInterval: POLL_INTERVAL_MS,
+    revalidateOnFocus: true,
+  });
 
-  // Load from localStorage once on mount
-  useEffect(() => {
-    setCustomPeople(loadCustom());
-    setRemovedNoms(loadRemoved());
-  }, []);
+  const {
+    data: removedKeys = new Set<string>(),
+    mutate: mutateRemoved,
+  } = useSWR("removed-people", fetchRemoved, {
+    refreshInterval: POLL_INTERVAL_MS,
+    revalidateOnFocus: true,
+  });
 
   /** Combined list: base PEOPLE minus removed + custom additions */
   const people: Person[] = [
-    ...PEOPLE.filter((p) => !removedNoms.has(`${p.prenom}|${p.nom}`)),
+    ...PEOPLE.filter((p) => !removedKeys.has(`${p.prenom}|${p.nom}`)),
     ...customPeople,
   ];
 
-  /** Add a new custom person */
-  const addPerson = useCallback((person: Person) => {
-    setCustomPeople((prev) => {
-      const next = [...prev, person];
-      localStorage.setItem(STORAGE_KEY_CUSTOM, JSON.stringify(next));
-      return next;
-    });
-  }, []);
+  /** Add a new custom person — persisted in DB, visible for everyone */
+  const addPerson = useCallback(
+    async (person: Person) => {
+      const personWithId: Person = {
+        ...person,
+        id: person.id ?? `custom-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      };
+      // Optimistic update
+      await mutateCustom(
+        async (prev = []) => {
+          await addCustomPerson(personWithId);
+          return [...prev, personWithId];
+        },
+        { revalidate: true }
+      );
+    },
+    [mutateCustom]
+  );
 
-  /** Remove a person (either base or custom) by their unique key */
-  const removePerson = useCallback((person: Person) => {
-    const key = `${person.prenom}|${person.nom}`;
-    const isCustom = customPeople.some(
-      (p) => `${p.prenom}|${p.nom}` === key
-    );
+  /** Remove a person (base or custom) — persisted in DB, visible for everyone */
+  const removePerson = useCallback(
+    async (person: Person) => {
+      const key = `${person.prenom}|${person.nom}`;
+      const isCustomPerson = customPeople.some(
+        (p) => `${p.prenom}|${p.nom}` === key
+      );
 
-    if (isCustom) {
-      setCustomPeople((prev) => {
-        const next = prev.filter((p) => `${p.prenom}|${p.nom}` !== key);
-        localStorage.setItem(STORAGE_KEY_CUSTOM, JSON.stringify(next));
-        return next;
-      });
-    } else {
-      setRemovedNoms((prev) => {
-        const next = new Set(prev);
-        next.add(key);
-        localStorage.setItem(STORAGE_KEY_REMOVED, JSON.stringify([...next]));
-        return next;
-      });
-    }
-  }, [customPeople]);
+      if (isCustomPerson) {
+        const target = customPeople.find((p) => `${p.prenom}|${p.nom}` === key);
+        if (!target?.id) return;
+        await mutateCustom(
+          async (prev = []) => {
+            await deleteCustomPerson(target.id!);
+            return prev.filter((p) => `${p.prenom}|${p.nom}` !== key);
+          },
+          { revalidate: true }
+        );
+      } else {
+        await mutateRemoved(
+          async (prev = new Set()) => {
+            await addRemovedKey(key);
+            return new Set([...prev, key]);
+          },
+          { revalidate: true }
+        );
+      }
+    },
+    [customPeople, mutateCustom, mutateRemoved]
+  );
 
-  /** Restore a removed base person */
-  const restorePerson = useCallback((person: Person) => {
-    const key = `${person.prenom}|${person.nom}`;
-    setRemovedNoms((prev) => {
-      const next = new Set(prev);
-      next.delete(key);
-      localStorage.setItem(STORAGE_KEY_REMOVED, JSON.stringify([...next]));
-      return next;
-    });
-  }, []);
+  /** Restore a hidden base person — persisted in DB */
+  const restorePerson = useCallback(
+    async (person: Person) => {
+      const key = `${person.prenom}|${person.nom}`;
+      await mutateRemoved(
+        async (prev = new Set()) => {
+          await deleteRemovedKey(key);
+          const next = new Set(prev);
+          next.delete(key);
+          return next;
+        },
+        { revalidate: true }
+      );
+    },
+    [mutateRemoved]
+  );
 
   const isRemoved = useCallback(
-    (person: Person) => removedNoms.has(`${person.prenom}|${person.nom}`),
-    [removedNoms]
+    (person: Person) => removedKeys.has(`${person.prenom}|${person.nom}`),
+    [removedKeys]
   );
 
   const isCustom = useCallback(
@@ -96,5 +121,14 @@ export function usePeople() {
     [customPeople]
   );
 
-  return { people, addPerson, removePerson, restorePerson, isRemoved, isCustom, customPeople, removedNoms };
+  return {
+    people,
+    addPerson,
+    removePerson,
+    restorePerson,
+    isRemoved,
+    isCustom,
+    customPeople,
+    removedNoms: removedKeys,
+  };
 }

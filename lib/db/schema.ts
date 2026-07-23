@@ -81,3 +81,22 @@ export const personStatus = pgTable("person_status", {
   isHoliday: boolean("is_holiday").notNull().default(false),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+// Resources added manually by CIR/Référents (persisted for all users)
+export const customPeople = pgTable("custom_people", {
+  id: text("id").primaryKey(),
+  prenom: text("prenom").notNull(),
+  nom: text("nom").notNull(),
+  ville: text("ville").notNull(),
+  codePostal: text("code_postal").notNull(),
+  role: text("role").notNull(),
+  lat: doublePrecision("lat").notNull(),
+  lng: doublePrecision("lng").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// Base resources hidden by CIR/Référents — key = "prenom|nom"
+export const removedPeople = pgTable("removed_people", {
+  key: text("key").primaryKey(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});

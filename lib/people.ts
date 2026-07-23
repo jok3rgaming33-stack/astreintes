@@ -1,6 +1,7 @@
 export type Role = "CIR" | "REF" | "TMF" | "TMRa" | "TMRe";
 
 export interface Person {
+  id?: string;       // set for custom people (DB-persisted), undefined for base PEOPLE
   nom: string;
   prenom: string;
   codePostal: string;
