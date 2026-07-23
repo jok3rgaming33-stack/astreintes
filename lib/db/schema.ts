@@ -6,6 +6,13 @@ import {
   timestamp,
 } from "drizzle-orm/pg-core";
 
+// ── Zones (one per secto) ─────────────────────────────────────────────────────
+export const zones = pgTable("zones", {
+  id: text("id").primaryKey(),           // e.g. "NAQ"
+  label: text("label").notNull(),        // e.g. "Nouvelle-Aquitaine"
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 // ── Better Auth required tables ──────────────────────────────────────────────
 // Column names are camelCase to match Better Auth's defaults. Do not rename.
 
@@ -17,8 +24,10 @@ export const user = pgTable("user", {
   image: text("image"),
   // App-specific: profile role (CIR / Référent / TMF / TMRa / TMRe)
   role: text("role").notNull().default("user"),
-  // App-specific: nom linking to lib/people.ts (e.g. "FAYOL")
+  // App-specific: nom linking to resources table (e.g. "FAYOL")
   nom: text("nom"),
+  // App-specific: zone this user belongs to
+  zoneId: text("zone_id").references(() => zones.id),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
   updatedAt: timestamp("updatedAt").notNull().defaultNow(),
 });
@@ -65,24 +74,40 @@ export const verification = pgTable("verification", {
 
 // ── App tables ────────────────────────────────────────────────────────────────
 
-// Incident markers placed on the map (shared across all users)
+// ── Resources (replaces static people.ts + custom_people) ────────────────────
+export const resources = pgTable("resources", {
+  id: text("id").primaryKey(),
+  zoneId: text("zone_id").notNull().references(() => zones.id, { onDelete: "cascade" }),
+  prenom: text("prenom").notNull(),
+  nom: text("nom").notNull(),
+  ville: text("ville").notNull(),
+  codePostal: text("code_postal").notNull(),
+  role: text("role").notNull(),
+  lat: doublePrecision("lat").notNull(),
+  lng: doublePrecision("lng").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ── Incident markers ──────────────────────────────────────────────────────────
 export const incidents = pgTable("incidents", {
   id: text("id").primaryKey(),
+  zoneId: text("zone_id").references(() => zones.id),
   label: text("label").notNull(),
   lat: doublePrecision("lat").notNull(),
   lng: doublePrecision("lng").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
-// Manual on-call / holiday overrides per person (keyed by nom)
+// ── On-call / holiday status (keyed by resource nom + zone) ──────────────────
 export const personStatus = pgTable("person_status", {
   nom: text("nom").primaryKey(),
+  zoneId: text("zone_id").references(() => zones.id),
   isOnCall: boolean("is_on_call").notNull().default(false),
   isHoliday: boolean("is_holiday").notNull().default(false),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
-// Resources added manually by CIR/Référents (persisted for all users)
+// ── Legacy tables (kept during transition, will be dropped after NAQ seed) ───
 export const customPeople = pgTable("custom_people", {
   id: text("id").primaryKey(),
   prenom: text("prenom").notNull(),
@@ -95,7 +120,6 @@ export const customPeople = pgTable("custom_people", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
-// Base resources hidden by CIR/Référents — key = "prenom|nom"
 export const removedPeople = pgTable("removed_people", {
   key: text("key").primaryKey(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

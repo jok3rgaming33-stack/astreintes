@@ -1,5 +1,5 @@
 /**
- * Maps professional email addresses to the exact `nom` used in lib/people.ts.
+ * Maps professional email addresses to the exact `nom` stored in the resources table.
  * Used both server-side (auth guard in shared-state.ts) and in syncUserRole.ts.
  */
 export const EMAIL_TO_NOM: Record<string, string> = {
@@ -68,3 +68,12 @@ export const EMAIL_TO_NOM: Record<string, string> = {
   "nstanislas@iliad-free.fr": "STANISLAS",
   "ethomas@iliad-free.fr": "THOMAS",
 };
+
+/**
+ * Maps professional email addresses to their zone ID (secto).
+ * All current users belong to NAQ. Add future sectos here as needed.
+ * Every email in EMAIL_TO_NOM should have a corresponding entry here.
+ */
+export const EMAIL_TO_ZONE: Record<string, string> = Object.fromEntries(
+  Object.keys(EMAIL_TO_NOM).map((email) => [email, "NAQ"])
+);

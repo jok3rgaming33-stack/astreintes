@@ -27,7 +27,9 @@ export const ROLE_LABELS: Record<Role, string> = {
   TMRe: "TMRe",
 };
 
-// Coordinates sourced from city names + postal codes (France)
+// NOTE: This array is kept as a compile-time reference and fallback.
+// The canonical source of truth is now the `resources` DB table (zone NAQ).
+// Once all consumers are migrated, this array will be removed.
 export const PEOPLE: Person[] = [
   // CIR
   { nom: "BAKKOUCH",       prenom: "Mehdi",      codePostal: "87085", ville: "Limoges",                     role: "CIR", lat: 45.8336, lng: 1.2611 },

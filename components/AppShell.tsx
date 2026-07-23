@@ -49,10 +49,13 @@ const POLL_INTERVAL_MS = 5000;
 export default function AppShell({
   canManageRessources = false,
   currentUserNom = null,
+  zoneId = "NAQ",
 }: {
   canManageRessources?: boolean;
-  /** nom as stored in lib/people.ts — null for CIR/Référents (they can edit all) */
+  /** nom as stored in the resources table — null for CIR/Référents (they can edit all) */
   currentUserNom?: string | null;
+  /** Zone identifier for this user (e.g. "NAQ") */
+  zoneId?: string;
 }) {
   const [activeRoles, setActiveRoles] = useState<Set<Role>>(new Set(ALL_ROLES));
   const [searchQuery, setSearchQuery] = useState("");

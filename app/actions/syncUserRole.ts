@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { user } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
-import { EMAIL_TO_NOM } from "@/lib/emailToNom";
+import { EMAIL_TO_NOM, EMAIL_TO_ZONE } from "@/lib/emailToNom";
 
 // kept only to satisfy a trailing reference — remove the inline block below
 const _UNUSED = {
@@ -146,37 +146,47 @@ const EMAIL_TO_ROLE: Record<string, string> = {
 
 export interface UserIdentity {
   role: string;
-  nom: string | null; // nom as used in lib/people.ts, null for unknown emails
+  nom: string | null;
+  zoneId: string;
 }
 
 /**
- * Called server-side on the main page after login to ensure the role column
- * is synced from the email → role lookup table.
- * Also returns the nom (matching people.ts) so the UI can restrict
- * status changes to the logged-in person only.
+ * Called server-side on the main page after login.
+ * Syncs role, nom and zoneId from the email lookup tables into the user row.
  */
 export async function syncUserRole(): Promise<UserIdentity> {
   const session = await auth.api.getSession({ headers: await headers() });
-  if (!session?.user) return { role: "user", nom: null };
+  if (!session?.user) return { role: "user", nom: null, zoneId: "NAQ" };
 
   const email = session.user.email.toLowerCase();
   const expectedRole = EMAIL_TO_ROLE[email] ?? "user";
   const nom = EMAIL_TO_NOM[email] ?? null;
+  // All current users are NAQ — future sectos will be added to EMAIL_TO_ZONE
+  const zoneId = EMAIL_TO_ZONE[email] ?? "NAQ";
 
-  // Only update if the stored role is still the default "user"
   const [row] = await db
-    .select({ role: user.role })
+    .select({ role: user.role, zoneId: user.zoneId, nom: user.nom })
     .from(user)
     .where(eq(user.email, email))
     .limit(1);
 
-  if (row && row.role === "user" && expectedRole !== "user") {
+  const needsUpdate =
+    (row?.role === "user" && expectedRole !== "user") ||
+    row?.zoneId == null ||
+    row?.nom == null;
+
+  if (row && needsUpdate) {
     await db
       .update(user)
-      .set({ role: expectedRole, updatedAt: new Date() })
+      .set({
+        ...(row.role === "user" && expectedRole !== "user" && { role: expectedRole }),
+        ...(row.zoneId == null && { zoneId }),
+        ...(row.nom == null && nom && { nom }),
+        updatedAt: new Date(),
+      })
       .where(eq(user.email, email));
-    return { role: expectedRole, nom };
+    return { role: expectedRole !== "user" ? expectedRole : row.role, nom, zoneId };
   }
 
-  return { role: row?.role ?? "user", nom };
+  return { role: row?.role ?? "user", nom: row?.nom ?? nom, zoneId: row?.zoneId ?? zoneId };
 }
