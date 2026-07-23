@@ -80,27 +80,22 @@ export default async function LoginPage() {
         <div className="flex flex-col items-center gap-4">
           {/* Free logo */}
           <div
-            className="flex items-center justify-center w-16 h-16 rounded-2xl"
+            className="flex items-center justify-center rounded-2xl overflow-hidden"
             style={{
-              background: "rgba(255,255,255,0.06)",
-              border: "1px solid rgba(255,255,255,0.1)",
+              width: "90px",
+              height: "90px",
+              background: "#fff",
+              boxShadow: "0 0 24px rgba(227,6,19,0.25), 0 4px 16px rgba(0,0,0,0.4)",
             }}
           >
-            <svg viewBox="0 0 100 100" width="44" height="44" aria-label="Free">
-              <rect width="100" height="100" rx="18" fill="#E30613" />
-              <text
-                x="50"
-                y="72"
-                textAnchor="middle"
-                fill="white"
-                fontSize="52"
-                fontWeight="900"
-                fontFamily="Arial Black, sans-serif"
-                letterSpacing="-2"
-              >
-                free
-              </text>
-            </svg>
+            <Image
+              src="/free-logo.jpg"
+              alt="Free"
+              width={90}
+              height={90}
+              className="object-cover"
+              priority
+            />
           </div>
 
           <div className="flex flex-col items-center gap-1 text-center">
