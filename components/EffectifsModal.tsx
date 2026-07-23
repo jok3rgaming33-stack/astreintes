@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { PEOPLE, ROLE_COLORS, ROLE_LABELS, type Person } from "@/lib/people";
+import { getOnCallPeriod } from "@/lib/schedule";
 
 interface EffectifsModalProps {
   open: boolean;
@@ -243,7 +244,7 @@ export default function EffectifsModal({
                 className="inline-block w-2 h-2 rounded-full animate-pulse"
                 style={{ background: "#eab308" }}
               />
-              En astreinte aujourd&apos;hui
+              En astreinte &mdash; <span className="normal-case font-medium tracking-normal" style={{ fontSize: "0.65rem" }}>{getOnCallPeriod()}</span>
             </p>
             <div className="flex flex-col gap-1 overflow-y-auto" style={{ maxHeight: "180px" }}>
               {onCallList.map((p) => {

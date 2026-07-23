@@ -386,3 +386,32 @@ export function getOnCallNoms(date: Date): Set<string> {
   }
   return result;
 }
+
+/**
+ * Returns the current on-call period as a formatted string.
+ * An on-call period runs from Friday 09:00 to the following Friday 09:00 (J+7).
+ * Example: "Du 17/07/2026 09h au 24/07/2026 09h"
+ */
+export function getOnCallPeriod(now: Date = new Date()): string {
+  const fmt = (d: Date) =>
+    `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()} 09h`;
+
+  // Find the most recent Friday at or before now
+  const start = new Date(now);
+  // day 0=Sun, 1=Mon, …, 5=Fri, 6=Sat
+  const dayOfWeek = start.getDay();
+  // days to subtract to reach last Friday (if today is Friday, delta = 0)
+  const delta = dayOfWeek >= 5 ? dayOfWeek - 5 : dayOfWeek + 2;
+  start.setDate(start.getDate() - delta);
+  start.setHours(9, 0, 0, 0);
+
+  // If we haven't reached 09:00 on that Friday yet, go back one more week
+  if (now < start) {
+    start.setDate(start.getDate() - 7);
+  }
+
+  const end = new Date(start);
+  end.setDate(end.getDate() + 7);
+
+  return `Du ${fmt(start)} au ${fmt(end)}`;
+}

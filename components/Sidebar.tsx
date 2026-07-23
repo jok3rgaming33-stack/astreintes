@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { PEOPLE, ROLE_COLORS, ROLE_LABELS, type Person, type Role } from "@/lib/people";
-import { getOnCallNoms } from "@/lib/schedule";
+import { getOnCallNoms, getOnCallPeriod } from "@/lib/schedule";
 import AddressSearch, { type NetworkIncident } from "@/components/AddressSearch";
 
 const ALL_ROLES: Role[] = ["CIR", "REF", "TMF", "TMRa", "TMRe"];
@@ -213,7 +213,7 @@ export default function Sidebar({
                   className="inline-block w-2 h-2 rounded-full animate-pulse"
                   style={{ background: "#10b981" }}
                 />
-                En astreinte aujourd&apos;hui
+                En astreinte &mdash; <span className="normal-case font-medium tracking-normal" style={{ fontSize: "0.65rem" }}>{getOnCallPeriod()}</span>
               </p>
               <div className="flex flex-col gap-1 overflow-y-auto" style={{ maxHeight: "200px" }}>
                 {people.filter((p) => effectiveOnCallNoms.has(p.nom) && !holidayNoms.has(p.nom)).map((p) => {
