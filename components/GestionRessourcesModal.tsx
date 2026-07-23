@@ -2,7 +2,6 @@
 
 import { useState, useMemo, useCallback } from "react";
 import {
-  PEOPLE,
   ROLE_COLORS,
   ROLE_LABELS,
   type Person,
@@ -162,25 +161,18 @@ export default function GestionRessourcesModal({
   }, [editingPerson, editForm, onUpdate]);
 
   // ── List ────────────────────────────────────────────────────────────────
+  // `people` is the already-merged list from usePeople():
+  //   base PEOPLE (minus removed) + custom overrides/additions
+  // This ensures edited profiles (role change, address) are shown with their updated values.
   const filteredList = useMemo(() => {
     const q = search.toLowerCase();
-    const all = [
-      ...PEOPLE,
-      ...people.filter((p) => isCustom(p)),
-    ];
-    const seen = new Set<string>();
-    return all.filter((p) => {
-      const key = `${p.prenom}|${p.nom}`;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return (
-        q === "" ||
-        p.nom.toLowerCase().includes(q) ||
-        p.prenom.toLowerCase().includes(q) ||
-        p.ville.toLowerCase().includes(q)
-      );
-    });
-  }, [search, people, isCustom]);
+    return people.filter((p) =>
+      q === "" ||
+      p.nom.toLowerCase().includes(q) ||
+      p.prenom.toLowerCase().includes(q) ||
+      p.ville.toLowerCase().includes(q)
+    );
+  }, [search, people]);
 
   // ── Add form ─────────────────────────────────────────────────────────────
   const handleGeocode = useCallback(async () => {
