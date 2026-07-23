@@ -96,31 +96,25 @@ export async function upsertPersonStatus(
     }
   }
 
-  // person_status PK is nom — use zone-scoped composite via upsert
-  const existing = await db
-    .select()
-    .from(personStatus)
-    .where(and(eq(personStatus.nom, nom), eq(personStatus.zoneId, u.zoneId)))
-    .limit(1);
-
-  if (existing.length > 0) {
-    await db
-      .update(personStatus)
-      .set({
-        ...(updates.isOnCall !== undefined && { isOnCall: updates.isOnCall }),
-        ...(updates.isHoliday !== undefined && { isHoliday: updates.isHoliday }),
-        updatedAt: new Date(),
-      })
-      .where(and(eq(personStatus.nom, nom), eq(personStatus.zoneId, u.zoneId)));
-  } else {
-    await db.insert(personStatus).values({
+  // PK is nom — upsert always writes zone_id so future reads can filter
+  await db
+    .insert(personStatus)
+    .values({
       nom,
       zoneId: u.zoneId,
       isOnCall: updates.isOnCall ?? false,
       isHoliday: updates.isHoliday ?? false,
       updatedAt: new Date(),
-    }).onConflictDoNothing();
-  }
+    })
+    .onConflictDoUpdate({
+      target: personStatus.nom,
+      set: {
+        zoneId: u.zoneId,
+        ...(updates.isOnCall !== undefined && { isOnCall: updates.isOnCall }),
+        ...(updates.isHoliday !== undefined && { isHoliday: updates.isHoliday }),
+        updatedAt: new Date(),
+      },
+    });
 }
 
 // ── Resources (replaces custom_people + static PEOPLE) ────────────────────
