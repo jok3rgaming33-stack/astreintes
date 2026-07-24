@@ -50,12 +50,15 @@ export default function AppShell({
   canManageRessources = false,
   currentUserNom = null,
   zoneId = "NAQ",
+  isAdmin = false,
 }: {
   canManageRessources?: boolean;
   /** nom as stored in the resources table — null for CIR/Référents (they can edit all) */
   currentUserNom?: string | null;
   /** Zone identifier for this user (e.g. "NAQ") */
   zoneId?: string;
+  /** True for the admin account — used to hide non-relevant UI */
+  isAdmin?: boolean;
 }) {
   const [activeRoles, setActiveRoles] = useState<Set<Role>>(new Set(ALL_ROLES));
   const [searchQuery, setSearchQuery] = useState("");

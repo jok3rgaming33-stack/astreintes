@@ -22,10 +22,10 @@ async function hashPassword(password) {
 
 const { Client } = pg;
 
-const ADMIN_EMAIL = "admin@astreintes.local";
+const ADMIN_EMAIL = "admin@admin.fr";
 const ADMIN_NAME  = "Admin";
-const ADMIN_PASS  = "admindev33";
-const ADMIN_ROLE  = "CIR"; // highest privilege in the app
+const ADMIN_PASS  = "admin1234";
+const ADMIN_ROLE  = "CIR";
 
 async function main() {
   const client = new Client({
