@@ -34,7 +34,6 @@ const ZONE_ACCENT: Record<string, { color: string; bg: string; dept: string }> =
 const DEFAULT_ACCENT = { color: "#a855f7", bg: "rgba(168,85,247,0.08)", dept: "" };
 
 export default function AdminZoneModal({ zones, forceOpen = false, onClose }: AdminZoneModalProps) {
-  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
