@@ -51,14 +51,15 @@ function buildPersonIcon(
   });
 }
 
-// Department codes for Nouvelle-Aquitaine region highlighted on the map.
-// 40 (Landes), 47 (Lot-et-Garonne) and 64 (Pyrénées-Atlantiques) are excluded
-// from the fill/outline highlight. Their shared borders with 33 and 24 remain
-// visible because dept 33 and 24 are still in the set and their violet outline
-// naturally traces the boundary line between them.
-const NOUVELLE_AQUITAINE_DEPTS = new Set([
-  "16", "17", "19", "23", "24", "33", "79", "86", "87",
-]);
+// Department codes per zone highlighted on the map.
+// NAQ: 40 (Landes), 47 (Lot-et-Garonne) and 64 (Pyrénées-Atlantiques) excluded
+// from fill — their shared borders trace naturally from included depts.
+const ZONE_DEPTS: Record<string, Set<string>> = {
+  NAQ: new Set(["16", "17", "19", "23", "24", "33", "79", "86", "87"]),
+  HDF: new Set(["02", "08", "59", "60", "62", "80"]),
+};
+// Fallback
+const NOUVELLE_AQUITAINE_DEPTS = ZONE_DEPTS.NAQ;
 
 interface MapComponentProps {
   /** Active people list — from usePeople() hook in parent */
@@ -81,6 +82,8 @@ interface MapComponentProps {
   onIncidentClick?: (incident: NetworkIncident) => void;
   /** When true, only on-call people are shown on the map */
   onlyOnCall?: boolean;
+  /** Zone identifier — drives which department boundaries are highlighted */
+  zoneId?: string;
 }
 
 export default function MapComponent({
@@ -97,6 +100,7 @@ export default function MapComponent({
   onMapClick,
   onIncidentClick,
   onlyOnCall = false,
+  zoneId = "NAQ",
 }: MapComponentProps) {
   // Use provided people list, fall back to the static constant
   const people = peopleProp ?? PEOPLE;
@@ -154,10 +158,11 @@ export default function MapComponent({
         deptLayer.addTo(mapRef.current);
         geoLayersRef.current.push(deptLayer);
 
-        // ── Layer 2: light-blue fill + stronger blue border inside NA ───────
+        // ── Layer 2: light-blue fill + stronger blue border inside zone ─────
+        const zoneDepts = ZONE_DEPTS[zoneId] ?? NOUVELLE_AQUITAINE_DEPTS;
         const naFeatures: unknown[] = (geojson.features ?? []).filter(
           (f: { properties: { code: string } }) =>
-            NOUVELLE_AQUITAINE_DEPTS.has(f.properties.code)
+            zoneDepts.has(f.properties.code)
         );
 
         if (naFeatures.length > 0) {

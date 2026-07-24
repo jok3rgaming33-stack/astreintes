@@ -376,6 +376,7 @@ export default function AppShell({
           onMapClick={handleMapClick}
           onIncidentClick={handleIncidentClick}
           onlyOnCall={onlyOnCall}
+          zoneId={zoneId}
         />
 
         {/* Signaler une panne button — opens choice modal */}
