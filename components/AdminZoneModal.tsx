@@ -2,7 +2,6 @@
 
 import { useState, useTransition } from "react";
 import { setAdminZone } from "@/app/actions/admin";
-import { useRouter } from "next/navigation";
 
 interface Zone {
   id: string;
@@ -44,8 +43,9 @@ export default function AdminZoneModal({ zones, forceOpen = false, onClose }: Ad
     setSelectedId(id);
     startTransition(async () => {
       await setAdminZone(id);
-      router.refresh();
-      onClose?.();
+      // Full page reload — forces page.tsx to re-run server-side with the new
+      // cookie, and ensures SWR + all client state start fresh with the correct zone.
+      window.location.href = "/";
     });
   }
 
