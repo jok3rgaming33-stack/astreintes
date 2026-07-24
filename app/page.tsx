@@ -5,10 +5,11 @@ import { syncUserRole } from "@/app/actions/syncUserRole";
 import { isPrivilegedRole } from "@/lib/userRole";
 import AppShell from "@/components/AppShell";
 import AdminZoneOverlay from "@/components/AdminZoneOverlay";
-import { ADMIN_EMAIL, getAdminSelectedZone, getZones } from "@/app/actions/admin";
+import { ADMIN_EMAIL } from "@/lib/adminConfig";
+import { getAdminSelectedZone, getZones } from "@/app/actions/admin";
 import { db } from "@/lib/db";
 import { resources } from "@/lib/db/schema";
-import { eq, sql } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 
 export default async function Home() {
   // ── Auth guard ─────────────────────────────────────────────────────────────

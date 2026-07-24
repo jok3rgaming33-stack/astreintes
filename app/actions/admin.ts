@@ -4,9 +4,7 @@ import { db } from "@/lib/db";
 import { zones } from "@/lib/db/schema";
 import { auth } from "@/lib/auth";
 import { headers, cookies } from "next/headers";
-
-export const ADMIN_EMAIL = "admin@admin.fr";
-export const ADMIN_ZONE_COOKIE = "admin_selected_zone";
+import { ADMIN_EMAIL, ADMIN_ZONE_COOKIE } from "@/lib/adminConfig";
 
 /** Returns true if the current session belongs to the admin account. */
 export async function isAdminSession(): Promise<boolean> {
