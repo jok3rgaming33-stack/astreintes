@@ -6,89 +6,97 @@ await client.connect();
 
 const ZONE_ID = "HDF";
 
+// Coordonnées GPS exactes issues de l'annuaire officiel HDF
+// LOONIS et POCHEZ ont des coordonnées réelles (Lille Sainghin + Quaedypre)
 const PEOPLE = [
   // CIR (10)
-  { nom: "BAHUCHET",   prenom: "Ludovic",          codePostal: "59100", ville: "Roubaix",               role: "CIR",      lat: 50.6942,  lng: 3.1746  },
-  { nom: "BENSABER",   prenom: "Hocine",            codePostal: "59000", ville: "Lille",                 role: "CIR",      lat: 50.6292,  lng: 3.0573  },
-  { nom: "MECHERI",    prenom: "Ayoub",             codePostal: "59300", ville: "Valenciennes",          role: "CIR",      lat: 50.3572,  lng: 3.5236  },
-  { nom: "SEBIANE",    prenom: "Bassim",            codePostal: "62000", ville: "Arras",                 role: "CIR",      lat: 50.2921,  lng: 2.7774  },
-  { nom: "GUENARD",    prenom: "Benjamin",          codePostal: "80000", ville: "Amiens",                role: "CIR",      lat: 49.8941,  lng: 2.2957  },
-  { nom: "PEPIN",      prenom: "Patrick",           codePostal: "62200", ville: "Boulogne-sur-Mer",      role: "CIR",      lat: 50.7267,  lng: 1.6146  },
-  { nom: "ABOUELHAK",  prenom: "Salah Eddine",      codePostal: "59400", ville: "Cambrai",               role: "CIR",      lat: 50.1764,  lng: 3.2367  },
-  { nom: "SAHRAOUI",   prenom: "Samir",             codePostal: "62100", ville: "Calais",                role: "CIR",      lat: 50.9519,  lng: 1.8587  },
-  { nom: "SOUIDI",     prenom: "Abdesselam",        codePostal: "59200", ville: "Tourcoing",             role: "CIR",      lat: 50.7236,  lng: 3.1606  },
-  { nom: "POCHEZ",     prenom: "Sylvain",           codePostal: "59380", ville: "Quaedypre",             role: "CIR",      lat: 50.983,   lng: 2.453   },
+  { nom: "BAHUCHET",        prenom: "Ludovic",          codePostal: "80000", ville: "Amiens",                  role: "CIR",      lat: 49.7520,  lng: 2.35978  },
+  { nom: "BENSABER",        prenom: "Hocine",            codePostal: "59140", ville: "Dunkerque",               role: "CIR",      lat: 51.0153,  lng: 2.30788  },
+  { nom: "MECHERI",         prenom: "Ayoub",             codePostal: "59000", ville: "Lille",                   role: "CIR",      lat: 50.6318,  lng: 3.02764  },
+  { nom: "SEBIANE",         prenom: "Bassim",            codePostal: "59000", ville: "Lille",                   role: "CIR",      lat: 50.6251,  lng: 3.03896  },
+  { nom: "GUENARD",         prenom: "Benjamin",          codePostal: "60000", ville: "Beauvais",                role: "CIR",      lat: 49.4397,  lng: 2.88304  },
+  { nom: "PEPIN",           prenom: "Patrick",           codePostal: "62000", ville: "Arras",                   role: "CIR",      lat: 50.5373,  lng: 2.81568  },
+  { nom: "ABOUELHAK",       prenom: "Salah Eddine",      codePostal: "80000", ville: "Amiens",                  role: "CIR",      lat: 49.7003,  lng: 2.79167  },
+  { nom: "SAHRAOUI",        prenom: "Samir",             codePostal: "59140", ville: "Dunkerque",               role: "CIR",      lat: 51.0107,  lng: 2.28809  },
+  { nom: "SOUIDI",          prenom: "Abdesselam",        codePostal: "62000", ville: "Arras",                   role: "CIR",      lat: 50.4335,  lng: 2.78191  },
+  { nom: "POCHEZ",          prenom: "Sylvain",           codePostal: "59380", ville: "Quaedypre",               role: "CIR",      lat: 50.9830,  lng: 2.45300  },
 
   // Référents (9)
-  { nom: "EL BADDAGUI", prenom: "Abdelaghni",      codePostal: "62000", ville: "Arras",                 role: "Référent", lat: 50.4144,  lng: 2.83589 },
-  { nom: "FAUVEAUX",    prenom: "Arnaud",           codePostal: "59300", ville: "Valenciennes",          role: "Référent", lat: 50.2448,  lng: 3.27774 },
-  { nom: "THOMPSON",    prenom: "Clement",          codePostal: "59140", ville: "Dunkerque",             role: "Référent", lat: 50.8188,  lng: 2.00086 },
-  { nom: "TOURNAND",    prenom: "Kevin",            codePostal: "80000", ville: "Amiens",                role: "Référent", lat: 49.9254,  lng: 2.30474 },
-  { nom: "TOURNET",     prenom: "Anthony",          codePostal: "59300", ville: "Valenciennes",          role: "Référent", lat: 50.3486,  lng: 3.12026 },
-  { nom: "DOM",         prenom: "Stephen",          codePostal: "08000", ville: "Charleville-Mézières",  role: "Référent", lat: 49.7541,  lng: 4.71733 },
-  { nom: "MESSADI",     prenom: "Nacim",            codePostal: "59000", ville: "Lille",                 role: "Référent", lat: 50.6096,  lng: 3.00912 },
-  { nom: "ROGERE",      prenom: "Thomas",           codePostal: "59440", ville: "Avesnes-sur-Helpe",     role: "Référent", lat: 50.288,   lng: 4.0413  },
-  { nom: "SYLLA",       prenom: "Abdoul Karim",     codePostal: "59000", ville: "Lille",                 role: "Référent", lat: 50.6236,  lng: 3.0634  },
+  { nom: "EL BADDAGUI",     prenom: "Abdelaghni",        codePostal: "62000", ville: "Arras",                   role: "Référent", lat: 50.4144,  lng: 2.83589  },
+  { nom: "FAUVEAUX",        prenom: "Arnaud",            codePostal: "59300", ville: "Valenciennes",            role: "Référent", lat: 50.2448,  lng: 3.27774  },
+  { nom: "THOMPSON",        prenom: "Clement",           codePostal: "59140", ville: "Dunkerque",               role: "Référent", lat: 50.8188,  lng: 2.00086  },
+  { nom: "TOURNAND",        prenom: "Kevin",             codePostal: "80000", ville: "Amiens",                  role: "Référent", lat: 49.9254,  lng: 2.30474  },
+  { nom: "TOURNET",         prenom: "Anthony",           codePostal: "59300", ville: "Valenciennes",            role: "Référent", lat: 50.3486,  lng: 3.12026  },
+  { nom: "DOM",             prenom: "Stephen",           codePostal: "08000", ville: "Charleville-Mézières",    role: "Référent", lat: 49.7541,  lng: 4.71733  },
+  { nom: "MESSADI",         prenom: "Nacim",             codePostal: "59000", ville: "Lille",                   role: "Référent", lat: 50.6096,  lng: 3.00912  },
+  { nom: "ROGERE",          prenom: "Thomas",            codePostal: "59440", ville: "Avesnes-sur-Helpe",       role: "Référent", lat: 50.2880,  lng: 4.04130  },
+  { nom: "SYLLA",           prenom: "Abdoul Karim",      codePostal: "59140", ville: "Dunkerque",               role: "Référent", lat: 51.0174,  lng: 2.37581  },
 
   // TMF (16)
-  { nom: "BIRBES",      prenom: "Jean-Claude",      codePostal: "62000", ville: "Arras",                 role: "TMF",      lat: 50.2917,  lng: 2.7780  },
-  { nom: "BLANCHARD",   prenom: "Sylvain",          codePostal: "80000", ville: "Amiens",                role: "TMF",      lat: 49.8942,  lng: 2.2958  },
-  { nom: "CLAEYSSEN",   prenom: "Guillaume",        codePostal: "59160", ville: "Lomme",                 role: "TMF",      lat: 50.6435,  lng: 3.0074  },
-  { nom: "COLLETTE",    prenom: "Pierre",           codePostal: "62000", ville: "Arras",                 role: "TMF",      lat: 50.2919,  lng: 2.7779  },
-  { nom: "CORNU",       prenom: "Cyril",            codePostal: "59300", ville: "Valenciennes",          role: "TMF",      lat: 50.3573,  lng: 3.5238  },
-  { nom: "DE MATOS",    prenom: "Anthony",          codePostal: "59000", ville: "Lille",                 role: "TMF",      lat: 50.6293,  lng: 3.0574  },
-  { nom: "DELBECQUE",   prenom: "Julien",           codePostal: "59100", ville: "Roubaix",               role: "TMF",      lat: 50.6943,  lng: 3.1747  },
-  { nom: "DUTRIEZ",     prenom: "Lahcen",           codePostal: "59500", ville: "Douai",                 role: "TMF",      lat: 50.3717,  lng: 3.0797  },
-  { nom: "FERROT",      prenom: "Guillaume",        codePostal: "62200", ville: "Boulogne-sur-Mer",      role: "TMF",      lat: 50.7268,  lng: 1.6147  },
-  { nom: "LAOUREUX",    prenom: "Vincent",          codePostal: "59300", ville: "Valenciennes",          role: "TMF",      lat: 50.3575,  lng: 3.5240  },
-  { nom: "LERMUSIAUX",  prenom: "Jerome",           codePostal: "80000", ville: "Amiens",                role: "TMF",      lat: 49.8945,  lng: 2.2961  },
-  { nom: "PIAU",        prenom: "Vincent",          codePostal: "59000", ville: "Lille",                 role: "TMF",      lat: 50.6295,  lng: 3.0576  },
-  { nom: "QUINCHON",    prenom: "Alexis",           codePostal: "62100", ville: "Calais",                role: "TMF",      lat: 50.9521,  lng: 1.8589  },
-  { nom: "ROUZET",      prenom: "Christophe",       codePostal: "59000", ville: "Lille",                 role: "TMF",      lat: 50.6296,  lng: 3.0577  },
-  { nom: "VANTORRE",    prenom: "Pierre-Marie",     codePostal: "59140", ville: "Dunkerque",             role: "TMF",      lat: 51.0347,  lng: 2.3770  },
-  { nom: "VIGNAUD",     prenom: "Fabrice",          codePostal: "62000", ville: "Arras",                 role: "TMF",      lat: 50.2920,  lng: 2.7781  },
+  { nom: "BEN SAADI",       prenom: "Ameziane",          codePostal: "62000", ville: "Arras",                   role: "TMF",      lat: 50.2715,  lng: 2.76865  },
+  { nom: "BEN MOUSSATI",    prenom: "Ossama",            codePostal: "80000", ville: "Amiens",                  role: "TMF",      lat: 49.9504,  lng: 2.31012  },
+  { nom: "BOMY",            prenom: "Kevin",             codePostal: "59140", ville: "Dunkerque",               role: "TMF",      lat: 50.9525,  lng: 2.19185  },
+  { nom: "DUBOIS",          prenom: "Sebastien",         codePostal: "62000", ville: "Arras",                   role: "TMF",      lat: 50.4976,  lng: 2.48135  },
+  { nom: "CATTAREE",        prenom: "Mickael",           codePostal: "02000", ville: "Laon",                    role: "TMF",      lat: 49.1540,  lng: 3.02412  },
+  { nom: "SENECHAL",        prenom: "Kevin",             codePostal: "60000", ville: "Beauvais",                role: "TMF",      lat: 49.3391,  lng: 2.49936  },
+  { nom: "NIASSE",          prenom: "Serigne Moussa",    codePostal: "60000", ville: "Beauvais",                role: "TMF",      lat: 49.1892,  lng: 2.46103  },
+  { nom: "HAGUENIN",        prenom: "Guillaume",         codePostal: "60000", ville: "Compiègne",               role: "TMF",      lat: 49.4043,  lng: 3.00118  },
+  { nom: "ISSOP",           prenom: "Mohammad",          codePostal: "59000", ville: "Lille",                   role: "TMF",      lat: 50.6424,  lng: 3.06905  },
+  { nom: "SONK",            prenom: "Anicet",            codePostal: "59000", ville: "Lille",                   role: "TMF",      lat: 50.5486,  lng: 3.02667  },
+  { nom: "MOEGNE MALI",     prenom: "Djamal",            codePostal: "59000", ville: "Lille",                   role: "TMF",      lat: 50.6300,  lng: 3.04523  },
+  { nom: "ZIANE",           prenom: "Ayoub",             codePostal: "59300", ville: "Valenciennes",            role: "TMF",      lat: 50.4540,  lng: 3.02883  },
+  { nom: "ANAAM",           prenom: "Moussa",            codePostal: "59000", ville: "Lille",                   role: "TMF",      lat: 50.6712,  lng: 2.97394  },
+  { nom: "BARRY",           prenom: "Mounir",            codePostal: "59000", ville: "Lille",                   role: "TMF",      lat: 50.6424,  lng: 3.06905  },
+  { nom: "BENAHMED",        prenom: "Samir",             codePostal: "59300", ville: "Valenciennes",            role: "TMF",      lat: 50.3909,  lng: 3.48288  },
+  { nom: "THIEBAUT",        prenom: "Christopher",       codePostal: "62000", ville: "Arras",                   role: "TMF",      lat: 50.4540,  lng: 2.94011  },
 
   // TMRa (16)
-  { nom: "BAUCHET",     prenom: "Julien",           codePostal: "59000", ville: "Lille",                 role: "TMRa",     lat: 50.6297,  lng: 3.0578  },
-  { nom: "BERRAHO",     prenom: "Rachid",           codePostal: "59300", ville: "Valenciennes",          role: "TMRa",     lat: 50.3576,  lng: 3.5241  },
-  { nom: "BONTINCK",    prenom: "Kevin",            codePostal: "59100", ville: "Roubaix",               role: "TMRa",     lat: 50.6944,  lng: 3.1748  },
-  { nom: "CORNEZ",      prenom: "Ludovic",          codePostal: "62000", ville: "Arras",                 role: "TMRa",     lat: 50.2922,  lng: 2.7783  },
-  { nom: "EL BOUAICHI", prenom: "Mehdi",            codePostal: "59500", ville: "Douai",                 role: "TMRa",     lat: 50.3718,  lng: 3.0798  },
-  { nom: "FONTAINE",    prenom: "Gauthier",         codePostal: "59000", ville: "Lille",                 role: "TMRa",     lat: 50.6298,  lng: 3.0579  },
-  { nom: "GALES",       prenom: "Pierre",           codePostal: "80000", ville: "Amiens",                role: "TMRa",     lat: 49.8946,  lng: 2.2962  },
-  { nom: "GUERARD",     prenom: "Vincent",          codePostal: "62200", ville: "Boulogne-sur-Mer",      role: "TMRa",     lat: 50.7269,  lng: 1.6148  },
-  { nom: "LARTIGE",     prenom: "Yannick",          codePostal: "59300", ville: "Valenciennes",          role: "TMRa",     lat: 50.3577,  lng: 3.5242  },
-  { nom: "LE MENN",     prenom: "Loic",             codePostal: "59000", ville: "Lille",                 role: "TMRa",     lat: 50.6299,  lng: 3.0580  },
-  { nom: "LEPRINCE",    prenom: "Etienne",          codePostal: "62000", ville: "Arras",                 role: "TMRa",     lat: 50.2923,  lng: 2.7784  },
-  { nom: "NECTOUX",     prenom: "Florent",          codePostal: "59140", ville: "Dunkerque",             role: "TMRa",     lat: 51.0348,  lng: 2.3771  },
-  { nom: "OLLIVIER",    prenom: "Thomas",           codePostal: "59000", ville: "Lille",                 role: "TMRa",     lat: 50.6300,  lng: 3.0581  },
-  { nom: "PUSSIAU",     prenom: "Thomas",           codePostal: "59100", ville: "Roubaix",               role: "TMRa",     lat: 50.6945,  lng: 3.1749  },
-  { nom: "SALAMI",      prenom: "S. Moussa",        codePostal: "62000", ville: "Arras",                 role: "TMRa",     lat: 50.2924,  lng: 2.7785  },
-  { nom: "VUILLEMIN",   prenom: "Kevin",            codePostal: "59300", ville: "Valenciennes",          role: "TMRa",     lat: 50.3578,  lng: 3.5243  },
+  { nom: "BENDAHO",         prenom: "Riad",              codePostal: "02000", ville: "Laon",                    role: "TMRa",     lat: 49.8608,  lng: 3.26899  },
+  { nom: "HATIF",           prenom: "Yannick",           codePostal: "02000", ville: "Aisne",                   role: "TMRa",     lat: 49.8338,  lng: 4.37047  },
+  { nom: "MARRON",          prenom: "Nicolas",           codePostal: "08000", ville: "Charleville-Mézières",    role: "TMRa",     lat: 49.7389,  lng: 4.70126  },
+  { nom: "NDONGO",          prenom: "Thierry",           codePostal: "80000", ville: "Amiens",                  role: "TMRa",     lat: 49.8763,  lng: 2.31297  },
+  { nom: "LAHAEYE",         prenom: "Pierre",            codePostal: "59140", ville: "Dunkerque",               role: "TMRa",     lat: 50.9698,  lng: 2.42647  },
+  { nom: "MOUSSAOUI",       prenom: "Rachid",            codePostal: "59140", ville: "Dunkerque",               role: "TMRa",     lat: 51.0182,  lng: 2.30148  },
+  { nom: "VARENNE",         prenom: "Anthony",           codePostal: "62200", ville: "Boulogne-sur-Mer",        role: "TMRa",     lat: 50.8129,  lng: 2.13960  },
+  { nom: "BAILLOEUIL",      prenom: "Johann",            codePostal: "60000", ville: "Beauvais",                role: "TMRa",     lat: 49.2899,  lng: 2.87813  },
+  { nom: "LEROUX",          prenom: "Julien",            codePostal: "80000", ville: "Amiens",                  role: "TMRa",     lat: 49.8552,  lng: 2.17488  },
+  { nom: "EL MOUSSAOUI",    prenom: "Zoher",             codePostal: "59000", ville: "Lille",                   role: "TMRa",     lat: 50.6069,  lng: 3.06073  },
+  { nom: "FAUVEAUX",        prenom: "Julien",            codePostal: "59300", ville: "Valenciennes",            role: "TMRa",     lat: 50.3000,  lng: 3.39330  },
+  { nom: "AIT KHOUYA MOUH", prenom: "Khalid",            codePostal: "62000", ville: "Arras",                   role: "TMRa",     lat: 50.4646,  lng: 2.83080  },
+  { nom: "AIT KHOUYA MOUH", prenom: "Smail",             codePostal: "62000", ville: "Arras",                   role: "TMRa",     lat: 50.4335,  lng: 2.78191  },
+  { nom: "VINCENT",         prenom: "Geoffrey",          codePostal: "62000", ville: "Arras",                   role: "TMRa",     lat: 50.3580,  lng: 2.84519  },
+  { nom: "RIANE",           prenom: "Madjid",            codePostal: "59100", ville: "Roubaix",                 role: "TMRa",     lat: 50.6723,  lng: 3.21427  },
+  { nom: "LHOU",            prenom: "Lahcen",            codePostal: "59300", ville: "Valenciennes",            role: "TMRa",     lat: 50.2399,  lng: 3.89568  },
 
   // TMRe (22)
-  { nom: "AOUST",        prenom: "Damien",          codePostal: "59000", ville: "Lille",                 role: "TMRe",     lat: 50.6301,  lng: 3.0582  },
-  { nom: "BARDEUR",      prenom: "Adrien",          codePostal: "59300", ville: "Valenciennes",          role: "TMRe",     lat: 50.3579,  lng: 3.5244  },
-  { nom: "BEAUMONT",     prenom: "Julien",          codePostal: "62000", ville: "Arras",                 role: "TMRe",     lat: 50.2925,  lng: 2.7786  },
-  { nom: "BOCO",         prenom: "Romain",          codePostal: "80000", ville: "Amiens",                role: "TMRe",     lat: 49.8947,  lng: 2.2963  },
-  { nom: "BONO",         prenom: "Steve",           codePostal: "59000", ville: "Lille",                 role: "TMRe",     lat: 50.6302,  lng: 3.0583  },
-  { nom: "BRENNE",       prenom: "Baptiste",        codePostal: "59100", ville: "Roubaix",               role: "TMRe",     lat: 50.6946,  lng: 3.1750  },
-  { nom: "CAMART",       prenom: "Thibault",        codePostal: "62200", ville: "Boulogne-sur-Mer",      role: "TMRe",     lat: 50.7270,  lng: 1.6149  },
-  { nom: "CHEVALIER",    prenom: "Florian",         codePostal: "59000", ville: "Lille",                 role: "TMRe",     lat: 50.6303,  lng: 3.0584  },
-  { nom: "COLLIER",      prenom: "Alexis",          codePostal: "59500", ville: "Douai",                 role: "TMRe",     lat: 50.3719,  lng: 3.0799  },
-  { nom: "DELBECQUE",    prenom: "Maxime",          codePostal: "59100", ville: "Roubaix",               role: "TMRe",     lat: 50.6947,  lng: 3.1751  },
-  { nom: "DEREGNAUCOURT",prenom: "Sylvain",         codePostal: "59300", ville: "Valenciennes",          role: "TMRe",     lat: 50.3580,  lng: 3.5245  },
-  { nom: "DESREUMAUX",   prenom: "Pierre",          codePostal: "62000", ville: "Arras",                 role: "TMRe",     lat: 50.2926,  lng: 2.7787  },
-  { nom: "DUBOIS",       prenom: "Florian",         codePostal: "59000", ville: "Lille",                 role: "TMRe",     lat: 50.6304,  lng: 3.0585  },
-  { nom: "DUCLERCQ",     prenom: "Kevin",           codePostal: "59140", ville: "Dunkerque",             role: "TMRe",     lat: 51.0349,  lng: 2.3772  },
-  { nom: "GUIETTE",      prenom: "Julien",          codePostal: "59000", ville: "Lille",                 role: "TMRe",     lat: 50.6305,  lng: 3.0586  },
-  { nom: "KAFANDO",      prenom: "Romuald",         codePostal: "62000", ville: "Arras",                 role: "TMRe",     lat: 50.2927,  lng: 2.7788  },
-  { nom: "LECLERCQ",     prenom: "Damien",          codePostal: "59300", ville: "Valenciennes",          role: "TMRe",     lat: 50.3581,  lng: 3.5246  },
-  { nom: "LIBERT",       prenom: "Julien",          codePostal: "59100", ville: "Roubaix",               role: "TMRe",     lat: 50.6948,  lng: 3.1752  },
-  { nom: "LOONIS",       prenom: "Quentin",         codePostal: "59000", ville: "Lille",                 role: "TMRe",     lat: 50.567,   lng: 2.946   },
-  { nom: "MEURISSE",     prenom: "Romain",          codePostal: "80000", ville: "Amiens",                role: "TMRe",     lat: 49.8948,  lng: 2.2964  },
-  { nom: "WATERLOT",     prenom: "Kevin",           codePostal: "59000", ville: "Lille",                 role: "TMRe",     lat: 50.6306,  lng: 3.0587  },
-  { nom: "ZOUBEIR",      prenom: "Oussama",         codePostal: "59300", ville: "Valenciennes",          role: "TMRe",     lat: 50.3582,  lng: 3.5247  },
+  { nom: "BOITELET",        prenom: "Wilfried",          codePostal: "02000", ville: "Laon",                    role: "TMRe",     lat: 49.6582,  lng: 3.37255  },
+  { nom: "FOURNIER",        prenom: "Bertrand",          codePostal: "02000", ville: "Laon",                    role: "TMRe",     lat: 49.5679,  lng: 3.62073  },
+  { nom: "LAMBERT",         prenom: "Jonathan",          codePostal: "08000", ville: "Charleville-Mézières",    role: "TMRe",     lat: 49.7728,  lng: 4.71887  },
+  { nom: "VAZ DE SOUSA",    prenom: "Joao",              codePostal: "08000", ville: "Charleville-Mézières",    role: "TMRe",     lat: 49.6963,  lng: 4.69636  },
+  { nom: "LEMAIRE",         prenom: "Gaetan",            codePostal: "80000", ville: "Amiens",                  role: "TMRe",     lat: 49.8328,  lng: 2.82580  },
+  { nom: "NAIJI",           prenom: "Mourad",            codePostal: "80000", ville: "Amiens",                  role: "TMRe",     lat: 49.8720,  lng: 2.33091  },
+  { nom: "VILBERT",         prenom: "Thibaut",           codePostal: "80000", ville: "Amiens",                  role: "TMRe",     lat: 49.8949,  lng: 2.29672  },
+  { nom: "KOUKI",           prenom: "Nasreddine",        codePostal: "59140", ville: "Dunkerque",               role: "TMRe",     lat: 51.0153,  lng: 2.30788  },
+  { nom: "LOONIS",          prenom: "Quentin",           codePostal: "59000", ville: "Lille Sainghin",          role: "TMRe",     lat: 50.5670,  lng: 2.94600  },
+  { nom: "MARZAK",          prenom: "Rachid",            codePostal: "59140", ville: "Dunkerque",               role: "TMRe",     lat: 50.7520,  lng: 2.24863  },
+  { nom: "BEVIERE",         prenom: "Ludovic",           codePostal: "60000", ville: "Beauvais",                role: "TMRe",     lat: 49.2854,  lng: 2.99141  },
+  { nom: "CORBEAU",         prenom: "Regis",             codePostal: "60000", ville: "Beauvais",                role: "TMRe",     lat: 49.1676,  lng: 2.86961  },
+  { nom: "HAFFNER",         prenom: "Eddy",              codePostal: "60000", ville: "Beauvais",                role: "TMRe",     lat: 49.3295,  lng: 2.19939  },
+  { nom: "SAHRAOUI",        prenom: "Abdelhak",          codePostal: "60000", ville: "Beauvais",                role: "TMRe",     lat: 49.2212,  lng: 2.28577  },
+  { nom: "SERROUKAS",       prenom: "Dimitris",          codePostal: "59000", ville: "Lille",                   role: "TMRe",     lat: 50.5486,  lng: 3.02667  },
+  { nom: "VERHAEGHE",       prenom: "Thierry",           codePostal: "59000", ville: "Lille",                   role: "TMRe",     lat: 50.6934,  lng: 2.91405  },
+  { nom: "DERUDDER",        prenom: "Nicolas",           codePostal: "59300", ville: "Valenciennes",            role: "TMRe",     lat: 50.4328,  lng: 3.09065  },
+  { nom: "DUDZINSKI",       prenom: "Bastien",           codePostal: "59300", ville: "Valenciennes",            role: "TMRe",     lat: 50.2774,  lng: 3.35792  },
+  { nom: "MARCHAND",        prenom: "Pierre-Mickael",    codePostal: "59300", ville: "Valenciennes",            role: "TMRe",     lat: 50.4804,  lng: 3.13615  },
+  { nom: "EL BADDAGUI",     prenom: "Younes",            codePostal: "62000", ville: "Arras",                   role: "TMRe",     lat: 50.4144,  lng: 2.83589  },
+  { nom: "TRIOUX",          prenom: "Alexandre",         codePostal: "62000", ville: "Arras",                   role: "TMRe",     lat: 50.4861,  lng: 2.54719  },
+  { nom: "TURBANT",         prenom: "Arnaud",            codePostal: "62000", ville: "Arras",                   role: "TMRe",     lat: 50.1216,  lng: 2.62923  },
+  { nom: "DAOUDI",          prenom: "Benyounes",         codePostal: "59000", ville: "Lille",                   role: "TMRe",     lat: 50.6229,  lng: 3.05849  },
+  { nom: "HARIZI",          prenom: "Mohamed",           codePostal: "59100", ville: "Roubaix",                 role: "TMRe",     lat: 50.7197,  lng: 3.16412  },
+  { nom: "HARRER",          prenom: "Cyrille",           codePostal: "59000", ville: "Lille",                   role: "TMRe",     lat: 50.6630,  lng: 3.04987  },
+  { nom: "RIANE",           prenom: "Djaafar",           codePostal: "59100", ville: "Roubaix",                 role: "TMRe",     lat: 50.6603,  lng: 3.17693  },
+  { nom: "RUVIO",           prenom: "Gianni",            codePostal: "59300", ville: "Valenciennes",            role: "TMRe",     lat: 50.2994,  lng: 3.80060  },
+  { nom: "THOMAS",          prenom: "Florian",           codePostal: "59300", ville: "Valenciennes",            role: "TMRe",     lat: 50.3328,  lng: 3.25880  },
 ];
 
 try {
@@ -98,25 +106,20 @@ try {
     [ZONE_ID, "Hauts-de-France"]
   );
 
+  // Delete all existing HDF resources and reseed cleanly
+  await client.query(`DELETE FROM resources WHERE zone_id = $1`, [ZONE_ID]);
+
   let inserted = 0;
   for (const p of PEOPLE) {
     const id = `base-HDF-${p.nom.replace(/\s+/g, "_").toUpperCase()}_${p.prenom.replace(/\s+/g, "_").toUpperCase()}`;
-    const result = await client.query(
+    await client.query(
       `INSERT INTO resources (id, zone_id, prenom, nom, ville, code_postal, role, lat, lng)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-       ON CONFLICT (id) DO UPDATE SET
-         prenom = EXCLUDED.prenom,
-         nom = EXCLUDED.nom,
-         ville = EXCLUDED.ville,
-         code_postal = EXCLUDED.code_postal,
-         role = EXCLUDED.role,
-         lat = EXCLUDED.lat,
-         lng = EXCLUDED.lng`,
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
       [id, ZONE_ID, p.prenom, p.nom, p.ville, p.codePostal, p.role, p.lat, p.lng]
     );
-    if (result.rowCount > 0) inserted++;
+    inserted++;
   }
-  console.log(`[seed-hdf] Done — ${inserted}/${PEOPLE.length} rows upserted`);
+  console.log(`[seed-hdf] Done — ${inserted}/${PEOPLE.length} rows inserted`);
 } finally {
   await client.end();
 }
