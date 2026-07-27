@@ -59,8 +59,10 @@ const ZONE_DEPTS: Record<string, Set<string>> = {
   NAQ:  new Set(["16", "17", "19", "23", "24", "33", "79", "86", "87"]),
   // Hauts-de-France
   HDF:  new Set(["02", "59", "60", "62", "80"]),
-  // Bretagne - Pays de la Loire (inclut 36 - Indre)
-  BPL:  new Set(["22", "29", "35", "36", "44", "49", "53", "56", "72", "85"]),
+  // Normandie - Centre Val de Loire
+  NVL:  new Set(["14", "18", "27", "28", "37", "41", "45", "50", "61", "76"]),
+  // Bretagne - Pays de la Loire (36 Indre → NVL)
+  BPL:  new Set(["22", "29", "35", "44", "49", "53", "56", "72", "85"]),
   // Pyrénées
   PYR:  new Set(["09", "31", "32", "40", "46", "47", "64", "65", "81", "82"]),
   // Occitanie
@@ -85,6 +87,7 @@ const NOUVELLE_AQUITAINE_DEPTS = ZONE_DEPTS.NAQ;
 const ZONE_VIEW: Record<string, { center: [number, number]; zoom: number }> = {
   NAQ:  { center: [45.4, 0.5],    zoom: 7 },
   HDF:  { center: [50.2, 2.8],    zoom: 8 },
+  NVL:  { center: [48.5, 0.8],    zoom: 7 },
   BPL:  { center: [47.6, -1.8],   zoom: 7 },
   PYR:  { center: [43.5, 0.2],    zoom: 7 },
   OCC:  { center: [43.8, 2.8],    zoom: 7 },

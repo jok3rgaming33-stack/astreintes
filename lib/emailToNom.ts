@@ -288,6 +288,7 @@ export const EMAIL_TO_ZONE: Record<string, string> = {
   "odauphin@iliad-free.fr": "HDF",
   "pcattelot@iliad-free.fr": "HDF",
   "smoussa@iliad-free.fr": "HDF",
+  // ── NVL (Normandie - Centre Val de Loire) — à compléter ──────────────────
   // ── BPL (Bretagne - Pays de la Loire) — à compléter ─────────────────────
   // ── PYR (Pyrénées) — à compléter ─────────────────────────────────────────
   // ── OCC (Occitanie) — à compléter ────────────────────────────────────────
@@ -443,6 +444,7 @@ export const EMAIL_TO_ROLE: Record<string, string> = {
   "odauphin@iliad-free.fr": "TMRe",
   "pcattelot@iliad-free.fr": "TMRe",
   "smoussa@iliad-free.fr": "TMRe",
+  // ── NVL (Normandie - Centre Val de Loire) — à compléter ──────────────────
   // ── BPL (Bretagne - Pays de la Loire) — à compléter ─────────────────────
   // ── PYR (Pyrénées) — à compléter ─────────────────────────────────────────
   // ── OCC (Occitanie) — à compléter ────────────────────────────────────────
