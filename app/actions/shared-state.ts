@@ -4,9 +4,10 @@ import { db } from "@/lib/db";
 import { incidents, personStatus, resources, user, zones } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
+import { headers, cookies } from "next/headers";
 import type { Person } from "@/lib/people";
 import { EMAIL_TO_NOM } from "@/lib/emailToNom";
+import { ADMIN_EMAIL, ADMIN_ZONE_COOKIE } from "@/lib/adminConfig";
 
 // ── Auth helpers ───────────────────────────────────────────────────────────
 
@@ -15,7 +16,19 @@ async function requireAuth() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user) throw new Error("Unauthorized");
 
-  // Fetch the full user row to get zoneId
+  // Admin account: resolve zoneId from the session cookie, not the DB
+  if (session.user.email === ADMIN_EMAIL) {
+    const cookieStore = await cookies();
+    const adminZone = cookieStore.get(ADMIN_ZONE_COOKIE)?.value ?? "NAQ";
+    return {
+      ...session.user,
+      role: "CIR" as const,   // admin has full privileges
+      zoneId: adminZone,
+      nom: null as string | null,
+    };
+  }
+
+  // Normal users: fetch the full user row to get zoneId
   const [row] = await db
     .select({ role: user.role, zoneId: user.zoneId, nom: user.nom })
     .from(user)
