@@ -21,7 +21,7 @@ interface AdminZoneModalProps {
 const ZONE_ACCENT: Record<string, { color: string; bg: string; dept: string }> = {
   NAQ:  { color: "#38bdf8", bg: "rgba(56,189,248,0.08)",   dept: "Nouvelle-Aquitaine — 16·17·19·23·24·33·79·86·87" },
   HDF:  { color: "#22c55e", bg: "rgba(34,197,94,0.08)",    dept: "Hauts-de-France — 02·59·60·62·80" },
-  NVL:  { color: "#f59e0b", bg: "rgba(245,158,11,0.08)",   dept: "Normandie / Centre Val de Loire — 14·18·27·28·37·41·45·50·61·76" },
+  NVL:  { color: "#f59e0b", bg: "rgba(245,158,11,0.08)",   dept: "Normandie / Centre Val de Loire — 14·18·27·28·36·37·41·45·50·61·76" },
   BPL:  { color: "#f97316", bg: "rgba(249,115,22,0.08)",   dept: "Bretagne / Pays de la Loire — 22·29·35·44·49·53·56·72·85" },
   PYR:  { color: "#eab308", bg: "rgba(234,179,8,0.08)",    dept: "Pyrénées — 09·31·32·40·46·47·64·65·81·82" },
   OCC:  { color: "#a3e635", bg: "rgba(163,230,53,0.08)",   dept: "Occitanie — 11·12·30·34·48·66·84" },

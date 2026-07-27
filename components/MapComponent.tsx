@@ -60,8 +60,8 @@ const ZONE_DEPTS: Record<string, Set<string>> = {
   // Hauts-de-France
   HDF:  new Set(["02", "59", "60", "62", "80"]),
   // Normandie - Centre Val de Loire
-  NVL:  new Set(["14", "18", "27", "28", "37", "41", "45", "50", "61", "76"]),
-  // Bretagne - Pays de la Loire (36 Indre → NVL)
+  NVL:  new Set(["14", "18", "27", "28", "36", "37", "41", "45", "50", "61", "76"]),
+  // Bretagne - Pays de la Loire
   BPL:  new Set(["22", "29", "35", "44", "49", "53", "56", "72", "85"]),
   // Pyrénées
   PYR:  new Set(["09", "31", "32", "40", "46", "47", "64", "65", "81", "82"]),
