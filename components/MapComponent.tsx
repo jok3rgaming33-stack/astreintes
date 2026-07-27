@@ -55,11 +55,46 @@ function buildPersonIcon(
 // NAQ: 40 (Landes), 47 (Lot-et-Garonne) and 64 (Pyrénées-Atlantiques) excluded
 // from fill — their shared borders trace naturally from included depts.
 const ZONE_DEPTS: Record<string, Set<string>> = {
-  NAQ: new Set(["16", "17", "19", "23", "24", "33", "79", "86", "87"]),
-  HDF: new Set(["02", "08", "59", "60", "62", "80"]),
+  // Nouvelle-Aquitaine (hors Landes/Lot-et-Garonne/Pyrénées-Atlantiques — frontières naturelles)
+  NAQ:  new Set(["16", "17", "19", "23", "24", "33", "79", "86", "87"]),
+  // Hauts-de-France
+  HDF:  new Set(["02", "08", "59", "60", "62", "80"]),
+  // Bretagne - Pays de la Loire
+  BPL:  new Set(["22", "29", "35", "44", "49", "53", "56", "72", "85"]),
+  // Pyrénées (Occitanie pyrénéenne + Landes + Lot-et-Garonne + Pyrénées-Atlantiques)
+  PYR:  new Set(["09", "31", "32", "40", "47", "64", "65"]),
+  // Occitanie (hors dpts PYR)
+  OCC:  new Set(["11", "12", "30", "34", "46", "48", "66", "81", "82"]),
+  // Provence - Alpes - Côte d'Azur - Corse
+  PACA: new Set(["04", "05", "06", "13", "20", "2A", "2B", "83", "84"]),
+  // Auvergne - Rhône-Alpes
+  ARA:  new Set(["01", "03", "07", "15", "26", "38", "42", "43", "63", "69", "73", "74"]),
+  // Bourgogne - Franche-Comté
+  BFC:  new Set(["21", "25", "39", "58", "70", "71", "89", "90"]),
+  // Grand Est
+  GES:  new Set(["08", "10", "51", "52", "54", "55", "57", "67", "68", "88"]),
+  // Île-de-France Est
+  IDFE: new Set(["77", "93", "94"]),
+  // Île-de-France Ouest
+  IDFO: new Set(["75", "78", "91", "92", "95"]),
 };
 // Fallback
 const NOUVELLE_AQUITAINE_DEPTS = ZONE_DEPTS.NAQ;
+
+/** Initial map center [lat, lng] and zoom level per zone */
+const ZONE_VIEW: Record<string, { center: [number, number]; zoom: number }> = {
+  NAQ:  { center: [45.4, 0.5],    zoom: 7 },
+  HDF:  { center: [50.2, 2.8],    zoom: 8 },
+  BPL:  { center: [47.6, -1.8],   zoom: 7 },
+  PYR:  { center: [43.5, 0.2],    zoom: 7 },
+  OCC:  { center: [43.8, 2.8],    zoom: 7 },
+  PACA: { center: [43.8, 6.0],    zoom: 7 },
+  ARA:  { center: [45.3, 4.8],    zoom: 7 },
+  BFC:  { center: [47.0, 4.8],    zoom: 7 },
+  GES:  { center: [48.5, 6.5],    zoom: 7 },
+  IDFE: { center: [48.7, 2.7],    zoom: 9 },
+  IDFO: { center: [48.8, 2.1],    zoom: 9 },
+};
 
 interface MapComponentProps {
   /** Active people list — from usePeople() hook in parent */
@@ -118,9 +153,10 @@ export default function MapComponent({
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
+    const view = ZONE_VIEW[zoneId] ?? { center: [46.5, 2.3] as [number, number], zoom: 6 };
     const map = L.map(containerRef.current, {
-      center: [46.2, -0.5],
-      zoom: 7,
+      center: view.center,
+      zoom: view.zoom,
       zoomControl: false,
     });
 

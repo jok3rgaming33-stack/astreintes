@@ -17,18 +17,19 @@ interface AdminZoneModalProps {
   onClose?: () => void;
 }
 
-/** Zone colour accents — add entries here as new zones are created */
+/** Zone colour accents — one distinct colour per secto */
 const ZONE_ACCENT: Record<string, { color: string; bg: string; dept: string }> = {
-  NAQ: {
-    color:  "#38bdf8",
-    bg:     "rgba(56,189,248,0.08)",
-    dept:   "Nouvelle-Aquitaine — 16, 17, 19, 23, 24, 33, 79, 86, 87",
-  },
-  HDF: {
-    color:  "#22c55e",
-    bg:     "rgba(34,197,94,0.08)",
-    dept:   "Hauts-de-France — 02, 08, 59, 60, 62, 80",
-  },
+  NAQ:  { color: "#38bdf8", bg: "rgba(56,189,248,0.08)",   dept: "Nouvelle-Aquitaine — 16·17·19·23·24·33·79·86·87" },
+  HDF:  { color: "#22c55e", bg: "rgba(34,197,94,0.08)",    dept: "Hauts-de-France — 02·08·59·60·62·80" },
+  BPL:  { color: "#f97316", bg: "rgba(249,115,22,0.08)",   dept: "Bretagne / Pays de la Loire — 22·29·35·44·49·53·56·72·85" },
+  PYR:  { color: "#eab308", bg: "rgba(234,179,8,0.08)",    dept: "Pyrénées — 09·31·32·40·47·64·65" },
+  OCC:  { color: "#a3e635", bg: "rgba(163,230,53,0.08)",   dept: "Occitanie — 11·12·30·34·46·48·66·81·82" },
+  PACA: { color: "#f472b6", bg: "rgba(244,114,182,0.08)",  dept: "PACA / Corse — 04·05·06·13·20·83·84" },
+  ARA:  { color: "#fb923c", bg: "rgba(251,146,60,0.08)",   dept: "Auvergne-Rhône-Alpes — 01·03·07·15·26·38·42·43·63·69·73·74" },
+  BFC:  { color: "#818cf8", bg: "rgba(129,140,248,0.08)",  dept: "Bourgogne-Franche-Comté — 21·25·39·58·70·71·89·90" },
+  GES:  { color: "#34d399", bg: "rgba(52,211,153,0.08)",   dept: "Grand Est — 08·10·51·52·54·55·57·67·68·88" },
+  IDFE: { color: "#e879f9", bg: "rgba(232,121,249,0.08)",  dept: "Île-de-France Est — 77·93·94" },
+  IDFO: { color: "#60a5fa", bg: "rgba(96,165,250,0.08)",   dept: "Île-de-France Ouest — 75·78·91·92·95" },
 };
 
 const DEFAULT_ACCENT = { color: "#a855f7", bg: "rgba(168,85,247,0.08)", dept: "" };

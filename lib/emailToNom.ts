@@ -288,6 +288,15 @@ export const EMAIL_TO_ZONE: Record<string, string> = {
   "odauphin@iliad-free.fr": "HDF",
   "pcattelot@iliad-free.fr": "HDF",
   "smoussa@iliad-free.fr": "HDF",
+  // ── BPL (Bretagne - Pays de la Loire) — à compléter ─────────────────────
+  // ── PYR (Pyrénées) — à compléter ─────────────────────────────────────────
+  // ── OCC (Occitanie) — à compléter ────────────────────────────────────────
+  // ── PACA (Provence - Alpes - Côte d'Azur - Corse) — à compléter ──────────
+  // ── ARA (Auvergne - Rhône-Alpes) — à compléter ───────────────────────────
+  // ── BFC (Bourgogne - Franche-Comté) — à compléter ────────────────────────
+  // ── GES (Grand Est) — à compléter ────────────────────────────────────────
+  // ── IDFE (Île-de-France Est) — à compléter ───────────────────────────────
+  // ── IDFO (Île-de-France Ouest) — à compléter ─────────────────────────────
 };
 
 /**
@@ -434,4 +443,13 @@ export const EMAIL_TO_ROLE: Record<string, string> = {
   "odauphin@iliad-free.fr": "TMRe",
   "pcattelot@iliad-free.fr": "TMRe",
   "smoussa@iliad-free.fr": "TMRe",
+  // ── BPL (Bretagne - Pays de la Loire) — à compléter ─────────────────────
+  // ── PYR (Pyrénées) — à compléter ─────────────────────────────────────────
+  // ── OCC (Occitanie) — à compléter ────────────────────────────────────────
+  // ── PACA (Provence - Alpes - Côte d'Azur - Corse) — à compléter ──────────
+  // ── ARA (Auvergne - Rhône-Alpes) — à compléter ───────────────────────────
+  // ── BFC (Bourgogne - Franche-Comté) — à compléter ────────────────────────
+  // ── GES (Grand Est) — à compléter ────────────────────────────────────────
+  // ── IDFE (Île-de-France Est) — à compléter ───────────────────────────────
+  // ── IDFO (Île-de-France Ouest) — à compléter ─────────────────────────────
 };
