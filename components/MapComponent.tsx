@@ -55,28 +55,28 @@ function buildPersonIcon(
 // NAQ: 40 (Landes), 47 (Lot-et-Garonne) and 64 (Pyrénées-Atlantiques) excluded
 // from fill — their shared borders trace naturally from included depts.
 const ZONE_DEPTS: Record<string, Set<string>> = {
-  // Nouvelle-Aquitaine (hors Landes/Lot-et-Garonne/Pyrénées-Atlantiques — frontières naturelles)
+  // Nouvelle-Aquitaine
   NAQ:  new Set(["16", "17", "19", "23", "24", "33", "79", "86", "87"]),
   // Hauts-de-France
-  HDF:  new Set(["02", "08", "59", "60", "62", "80"]),
-  // Bretagne - Pays de la Loire
-  BPL:  new Set(["22", "29", "35", "44", "49", "53", "56", "72", "85"]),
-  // Pyrénées (Occitanie pyrénéenne + Landes + Lot-et-Garonne + Pyrénées-Atlantiques)
-  PYR:  new Set(["09", "31", "32", "40", "47", "64", "65"]),
-  // Occitanie (hors dpts PYR)
-  OCC:  new Set(["11", "12", "30", "34", "46", "48", "66", "81", "82"]),
-  // Provence - Alpes - Côte d'Azur - Corse
-  PACA: new Set(["04", "05", "06", "13", "20", "2A", "2B", "83", "84"]),
+  HDF:  new Set(["02", "59", "60", "62", "80"]),
+  // Bretagne - Pays de la Loire (inclut 36 - Indre)
+  BPL:  new Set(["22", "29", "35", "36", "44", "49", "53", "56", "72", "85"]),
+  // Pyrénées
+  PYR:  new Set(["09", "31", "32", "40", "46", "47", "64", "65", "81", "82"]),
+  // Occitanie
+  OCC:  new Set(["11", "12", "30", "34", "48", "66", "84"]),
+  // Provence - Alpes - Côte d'Azur - Corse (2A/2B pour la Corse, pas "20")
+  PACA: new Set(["04", "05", "06", "13", "2A", "2B", "83"]),
   // Auvergne - Rhône-Alpes
-  ARA:  new Set(["01", "03", "07", "15", "26", "38", "42", "43", "63", "69", "73", "74"]),
-  // Bourgogne - Franche-Comté
-  BFC:  new Set(["21", "25", "39", "58", "70", "71", "89", "90"]),
-  // Grand Est
-  GES:  new Set(["08", "10", "51", "52", "54", "55", "57", "67", "68", "88"]),
+  ARA:  new Set(["03", "07", "15", "26", "38", "42", "43", "63", "69"]),
+  // Bourgogne - Franche-Comté (inclut 01 Ain, 73 Savoie, 74 Haute-Savoie)
+  BFC:  new Set(["01", "21", "25", "39", "58", "70", "71", "73", "74", "89", "90"]),
+  // Grand Est (08 Ardennes retiré — appartient à HDF)
+  GES:  new Set(["10", "51", "52", "54", "55", "57", "67", "68", "88"]),
   // Île-de-France Est
-  IDFE: new Set(["77", "93", "94"]),
+  IDFE: new Set(["75", "77", "91", "94"]),
   // Île-de-France Ouest
-  IDFO: new Set(["75", "78", "91", "92", "95"]),
+  IDFO: new Set(["78", "92", "93", "95"]),
 };
 // Fallback
 const NOUVELLE_AQUITAINE_DEPTS = ZONE_DEPTS.NAQ;
