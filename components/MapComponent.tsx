@@ -44,10 +44,10 @@ function buildPersonIcon(
   const onCallClass = isOnCall ? " person-marker-oncall" : "";
   return L.divIcon({
     className: "",
-    html: `<div class="person-marker${onCallClass}" style="background-color:${color};position:relative;min-width:38px;${ring}${extra}">${initials}${badge}</div>`,
-    iconSize: [38, 34],
-    iconAnchor: [19, 17],
-    popupAnchor: [0, -20],
+    html: `<div class="person-marker${onCallClass}" style="background-color:${color};position:relative;min-width:28px;${ring}${extra}">${initials}${badge}</div>`,
+    iconSize: [28, 26],
+    iconAnchor: [14, 13],
+    popupAnchor: [0, -16],
   });
 }
 
@@ -404,9 +404,9 @@ export default function MapComponent({
       const icon = L.divIcon({
         className: "",
         html: `<div class="incident-marker">${wifiOffSvg}</div>`,
-        iconSize: [38, 38],
-        iconAnchor: [19, 19],
-        popupAnchor: [0, -24],
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+        popupAnchor: [0, -18],
       });
 
       const shortLabel = incident.label.split(",").slice(0, 2).join(",");
