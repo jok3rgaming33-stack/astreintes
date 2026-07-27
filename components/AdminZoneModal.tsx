@@ -116,6 +116,49 @@ export default function AdminZoneModal({ zones, forceOpen = false, onClose }: Ad
 
         {/* Zone list */}
         <div className="flex flex-col gap-3 overflow-y-auto px-6 py-5" style={{ flex: 1 }}>
+          {/* All-zones shortcut */}
+          <button
+            onClick={() => handleSelect("ALL")}
+            disabled={isPending}
+            className="w-full text-left flex items-center gap-4 px-4 py-4 rounded-xl transition-all active:scale-[0.98] disabled:opacity-60"
+            style={{
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.15)",
+              cursor: isPending ? "wait" : "pointer",
+            }}
+            onMouseEnter={(e) => { if (!isPending) e.currentTarget.style.border = "1px solid rgba(255,255,255,0.35)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.border = "1px solid rgba(255,255,255,0.15)"; }}
+          >
+            <div
+              className="flex items-center justify-center w-11 h-11 rounded-xl flex-shrink-0"
+              style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.2)" }}
+            >
+              {isPending && selectedId === "ALL" ? (
+                <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: "#fff", borderTopColor: "transparent" }} />
+              ) : (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="2" y1="12" x2="22" y2="12"/>
+                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                </svg>
+              )}
+            </div>
+            <div className="flex flex-col gap-0.5 min-w-0">
+              <span className="text-sm font-bold" style={{ color: "#fff" }}>Toutes les zones</span>
+              <span className="text-xs" style={{ color: "var(--color-text-secondary)" }}>
+                Vue globale — {zones.length} secteurs
+              </span>
+            </div>
+            <div className="ml-auto flex-shrink-0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 18l6-6-6-6"/>
+              </svg>
+            </div>
+          </button>
+
+          {/* Separator */}
+          <div style={{ height: "1px", background: "var(--color-border)" }} />
+
           {zones.map((zone) => {
             const accent = ZONE_ACCENT[zone.id] ?? DEFAULT_ACCENT;
             const isLoading = isPending && selectedId === zone.id;

@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { incidents, personStatus, resources, user, zones } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, isNotNull } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { headers, cookies } from "next/headers";
 import type { Person } from "@/lib/people";
@@ -59,7 +59,7 @@ export async function getIncidents() {
   const rows = await db
     .select()
     .from(incidents)
-    .where(eq(incidents.zoneId, u.zoneId))
+    .where(u.zoneId === "ALL" ? isNotNull(incidents.zoneId) : eq(incidents.zoneId, u.zoneId))
     .orderBy(incidents.createdAt);
   // Return fields needed by NetworkIncident (createdAt as ISO string, addedBy)
   return rows.map((r) => ({
@@ -101,7 +101,7 @@ export async function getPersonStatuses() {
   return db
     .select()
     .from(personStatus)
-    .where(eq(personStatus.zoneId, u.zoneId));
+    .where(u.zoneId === "ALL" ? isNotNull(personStatus.zoneId) : eq(personStatus.zoneId, u.zoneId));
 }
 
 export async function upsertPersonStatus(
@@ -148,7 +148,7 @@ export async function getResources(): Promise<Person[]> {
   const rows = await db
     .select()
     .from(resources)
-    .where(eq(resources.zoneId, u.zoneId))
+    .where(u.zoneId === "ALL" ? isNotNull(resources.zoneId) : eq(resources.zoneId, u.zoneId))
     .orderBy(resources.nom);
   return rows.map((r) => ({
     id: r.id,

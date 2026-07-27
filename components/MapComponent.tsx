@@ -85,6 +85,7 @@ const NOUVELLE_AQUITAINE_DEPTS = ZONE_DEPTS.NAQ;
 
 /** Initial map center [lat, lng] and zoom level per zone */
 const ZONE_VIEW: Record<string, { center: [number, number]; zoom: number }> = {
+  ALL:  { center: [46.8, 2.3],    zoom: 6 },
   NAQ:  { center: [45.4, 0.5],    zoom: 7 },
   HDF:  { center: [50.2, 2.8],    zoom: 8 },
   NVL:  { center: [48.5, 0.8],    zoom: 7 },
@@ -197,47 +198,58 @@ export default function MapComponent({
         deptLayer.addTo(mapRef.current);
         geoLayersRef.current.push(deptLayer);
 
-        // ── Layer 2: light-blue fill + stronger blue border inside zone ─────
-        const zoneDepts = ZONE_DEPTS[zoneId] ?? NOUVELLE_AQUITAINE_DEPTS;
-        const naFeatures: unknown[] = (geojson.features ?? []).filter(
-          (f: { properties: { code: string } }) =>
-            zoneDepts.has(f.properties.code)
-        );
+        // ── Layers 2+3: zone fill + outline ───────────────────────────────
+        const ZONE_COLOURS: Record<string, string> = {
+          NAQ: "#38bdf8", HDF: "#22c55e", NVL: "#f59e0b", BPL: "#f97316",
+          PYR: "#eab308", OCC: "#a3e635", PACA: "#f472b6", ARA: "#fb923c",
+          BFC: "#818cf8", GES: "#34d399", IDFE: "#e879f9", IDFO: "#60a5fa",
+        };
 
-        if (naFeatures.length > 0) {
-          const naFillLayer = L.geoJSON(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            { type: "FeatureCollection", features: naFeatures } as any,
-            {
-              style: {
-                color: "#4b6cb7",
-                weight: 2,
-                opacity: 0.9,
-                fillColor: "#4b6cb7",
-                fillOpacity: 0.08,
-                interactive: false,
-              },
-            }
+        if (zoneId === "ALL") {
+          // Render every zone with its own colour
+          Object.entries(ZONE_DEPTS).forEach(([id, depts]) => {
+            const colour = ZONE_COLOURS[id] ?? "#7c3aed";
+            const features = (geojson.features ?? []).filter(
+              (f: { properties: { code: string } }) => depts.has(f.properties.code)
+            );
+            if (!features.length || !mapRef.current) return;
+            const fillLayer = L.geoJSON(
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              { type: "FeatureCollection", features } as any,
+              { style: { color: colour, weight: 2, opacity: 0.9, fillColor: colour, fillOpacity: 0.1, interactive: false } }
+            );
+            fillLayer.addTo(mapRef.current);
+            geoLayersRef.current.push(fillLayer);
+            const outline = L.geoJSON(
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              { type: "FeatureCollection", features } as any,
+              { style: { color: colour, weight: 3, opacity: 1, fillOpacity: 0, interactive: false } }
+            );
+            outline.addTo(mapRef.current);
+            geoLayersRef.current.push(outline);
+          });
+        } else {
+          // Single zone
+          const zoneDepts = ZONE_DEPTS[zoneId] ?? NOUVELLE_AQUITAINE_DEPTS;
+          const naFeatures: unknown[] = (geojson.features ?? []).filter(
+            (f: { properties: { code: string } }) => zoneDepts.has(f.properties.code)
           );
-          naFillLayer.addTo(mapRef.current);
-          geoLayersRef.current.push(naFillLayer);
-
-          // ── Layer 3: thick violet outline on the outer edge of NA ─────────
-          const regionOutline = L.geoJSON(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            { type: "FeatureCollection", features: naFeatures } as any,
-            {
-              style: {
-                color: "#7c3aed",
-                weight: 4,
-                opacity: 1,
-                fillOpacity: 0,
-                interactive: false,
-              },
-            }
-          );
-          regionOutline.addTo(mapRef.current);
-          geoLayersRef.current.push(regionOutline);
+          if (naFeatures.length > 0) {
+            const naFillLayer = L.geoJSON(
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              { type: "FeatureCollection", features: naFeatures } as any,
+              { style: { color: "#4b6cb7", weight: 2, opacity: 0.9, fillColor: "#4b6cb7", fillOpacity: 0.08, interactive: false } }
+            );
+            naFillLayer.addTo(mapRef.current);
+            geoLayersRef.current.push(naFillLayer);
+            const regionOutline = L.geoJSON(
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              { type: "FeatureCollection", features: naFeatures } as any,
+              { style: { color: "#7c3aed", weight: 4, opacity: 1, fillOpacity: 0, interactive: false } }
+            );
+            regionOutline.addTo(mapRef.current);
+            geoLayersRef.current.push(regionOutline);
+          }
         }
       })
       .catch(() => {
