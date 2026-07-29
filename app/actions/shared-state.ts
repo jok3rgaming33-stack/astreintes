@@ -236,6 +236,37 @@ export async function revokeResource(id: string) {
   return { revoked: true, nom: resource.nom, prenom: resource.prenom };
 }
 
+/**
+ * Called right after signup: looks up the resource codePostal by nom
+ * and stores it in user.codePostal so verification never depends on
+ * the resource row still existing.
+ * Returns { ok: true } or throws with a user-facing message.
+ */
+export async function storeVerificationCode(email: string): Promise<{ ok: true }> {
+  const normalised = email.trim().toLowerCase();
+  const nom = EMAIL_TO_NOM[normalised];
+  if (!nom) throw new Error("Adresse e-mail non reconnue dans l'annuaire.");
+
+  const [resource] = await db
+    .select({ codePostal: resources.codePostal })
+    .from(resources)
+    .where(eq(resources.nom, nom))
+    .limit(1);
+
+  if (!resource) {
+    throw new Error(
+      "Vous n'êtes pas encore enregistré dans le système. Contactez votre administrateur pour être ajouté."
+    );
+  }
+
+  await db
+    .update(user)
+    .set({ codePostal: resource.codePostal })
+    .where(eq(user.email, normalised));
+
+  return { ok: true };
+}
+
 export async function updateResource(
   id: string,
   updates: { role?: string; ville?: string; codePostal?: string; lat?: number; lng?: number }

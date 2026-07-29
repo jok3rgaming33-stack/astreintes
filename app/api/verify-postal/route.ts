@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { user, resources } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
-import { EMAIL_TO_NOM } from "@/lib/emailToNom";
+import { user } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,39 +16,41 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 1. Find the nom from the email directory (EMAIL_TO_NOM maps email → nom string)
-    const nom = EMAIL_TO_NOM[email];
-    if (!nom) {
-      return NextResponse.json(
-        { error: "Adresse e-mail non reconnue dans l'annuaire." },
-        { status: 404 }
-      );
-    }
-
-    // 2. Find the matching resource row by nom
-    const [resource] = await db
-      .select({ codePostal: resources.codePostal })
-      .from(resources)
-      .where(eq(resources.nom, nom))
+    // Look up the stored verification code on the user row
+    const [row] = await db
+      .select({ codePostal: user.codePostal, emailVerified: user.emailVerified })
+      .from(user)
+      .where(eq(user.email, email))
       .limit(1);
 
-    if (!resource) {
+    if (!row) {
       return NextResponse.json(
-        { error: "Ressource introuvable. Contactez votre administrateur." },
+        { error: "Compte introuvable." },
         { status: 404 }
       );
     }
 
-    // 3. Compare postal codes (normalise to 5-digit string)
-    const storedCP = (resource.codePostal ?? "").trim();
-    if (storedCP !== codePostal) {
+    if (row.emailVerified) {
+      // Already verified — just let them sign in
+      return NextResponse.json({ ok: true });
+    }
+
+    if (!row.codePostal) {
+      // storeVerificationCode was never called — resource likely not added yet
+      return NextResponse.json(
+        { error: "Votre fiche n'a pas encore été créée par l'administrateur. Contactez-le avant de vous inscrire." },
+        { status: 404 }
+      );
+    }
+
+    if (row.codePostal.trim() !== codePostal) {
       return NextResponse.json(
         { error: "Code postal incorrect." },
         { status: 400 }
       );
     }
 
-    // 4. Mark the user account as verified
+    // Mark account as verified
     await db
       .update(user)
       .set({ emailVerified: true })

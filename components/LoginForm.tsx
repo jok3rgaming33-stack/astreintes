@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { PEOPLE } from "@/lib/people";
 import { EMAIL_TO_NOM } from "@/lib/emailToNom";
+import { storeVerificationCode } from "@/app/actions/shared-state";
 
 type Mode = "signin" | "signup";
 type Step = "form" | "postal";   // postal = code postal verification after signup
@@ -59,6 +60,15 @@ export default function LoginForm() {
         });
         if (result.error) {
           setError(result.error.message ?? "Erreur lors de la création du compte.");
+          return;
+        }
+        // Fetch + store the expected codePostal from resources into user row.
+        // If the resource doesn't exist yet, show a clear error immediately.
+        try {
+          await storeVerificationCode(knownEmail);
+        } catch (storeErr: unknown) {
+          const msg = storeErr instanceof Error ? storeErr.message : "Erreur de vérification.";
+          setError(msg);
           return;
         }
         // Move to postal code verification step

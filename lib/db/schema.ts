@@ -28,6 +28,8 @@ export const user = pgTable("user", {
   nom: text("nom"),
   // App-specific: zone this user belongs to
   zoneId: text("zone_id").references(() => zones.id),
+  // App-specific: postal code stored at signup for identity verification
+  codePostal: text("codePostal"),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
   updatedAt: timestamp("updatedAt").notNull().defaultNow(),
 });
