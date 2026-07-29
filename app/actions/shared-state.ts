@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { incidents, personStatus, resources, user, zones } from "@/lib/db/schema";
+import { incidents, personStatus, resources, user, verification, zones } from "@/lib/db/schema";
 import { eq, and, isNotNull } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { headers, cookies } from "next/headers";
@@ -186,6 +186,54 @@ export async function deleteResource(id: string) {
   await db
     .delete(resources)
     .where(and(eq(resources.id, id), eq(resources.zoneId, u.zoneId)));
+}
+
+/**
+ * Révocation complète : supprime la ressource de la table resources ET
+ * supprime le compte utilisateur associé (user + session + account).
+ * La personne devra se réinscrire intégralement et reverifier son email.
+ */
+export async function revokeResource(id: string) {
+  const u = await requireManager();
+
+  // 1. Fetch the resource row to get nom (used to find the user account)
+  const [resource] = await db
+    .select({ nom: resources.nom, prenom: resources.prenom })
+    .from(resources)
+    .where(and(eq(resources.id, id), eq(resources.zoneId, u.zoneId)))
+    .limit(1);
+
+  if (!resource) throw new Error("Ressource introuvable");
+
+  // 2. Delete the resource entry
+  await db
+    .delete(resources)
+    .where(and(eq(resources.id, id), eq(resources.zoneId, u.zoneId)));
+
+  // 3. Find and delete the associated user account (by nom + zoneId)
+  const [linkedUser] = await db
+    .select({ id: user.id })
+    .from(user)
+    .where(and(eq(user.nom, resource.nom), eq(user.zoneId, u.zoneId)))
+    .limit(1);
+
+  if (linkedUser) {
+    // Clean up person status
+    await db.delete(personStatus).where(eq(personStatus.nom, resource.nom));
+    // Clean up pending email verification tokens for this user's email
+    const [userRow] = await db
+      .select({ email: user.email })
+      .from(user)
+      .where(eq(user.id, linkedUser.id))
+      .limit(1);
+    if (userRow?.email) {
+      await db.delete(verification).where(eq(verification.identifier, userRow.email));
+    }
+    // session + account rows are CASCADE-deleted when user is deleted
+    await db.delete(user).where(eq(user.id, linkedUser.id));
+  }
+
+  return { revoked: true, nom: resource.nom, prenom: resource.prenom };
 }
 
 export async function updateResource(

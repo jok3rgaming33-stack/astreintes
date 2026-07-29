@@ -18,6 +18,7 @@ interface GestionRessourcesModalProps {
   onRemove: (person: Person) => void;
   onRestore: (person: Person) => void;
   onUpdate: (person: Person, updates: { role?: Role; ville?: string; codePostal?: string; lat?: number; lng?: number }) => Promise<void>;
+  onRevoke: (person: Person) => Promise<void>;
   isRemoved: (person: Person) => boolean;
   isCustom: (person: Person) => boolean;
   /** Only CIR and Référent may edit profiles */
@@ -48,6 +49,7 @@ export default function GestionRessourcesModal({
   onRemove,
   onRestore,
   onUpdate,
+  onRevoke,
   isRemoved,
   isCustom,
   canManageRessources = false,
@@ -59,6 +61,7 @@ export default function GestionRessourcesModal({
   const [geocodeError, setGeocodeError] = useState("");
   const [addSuccess, setAddSuccess] = useState("");
   const [confirmDelete, setConfirmDelete] = useState<Person | null>(null);
+  const [revokeLoading, setRevokeLoading] = useState(false);
 
   // ── Edit state ──────────────────────────────────────────────────────────
   const [editingPerson, setEditingPerson] = useState<Person | null>(null);
@@ -642,10 +645,12 @@ export default function GestionRessourcesModal({
         )}
       </div>
 
-      {/* ── Confirm delete dialog ── */}
+      {/* ── Confirm delete / revoke dialog ── */}
       {confirmDelete && (
-        <div className="fixed inset-0 z-[3200] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.5)" }}>
-          <div className="flex flex-col gap-4 rounded-2xl p-6 shadow-2xl w-full" style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", maxWidth: "340px" }}>
+        <div className="fixed inset-0 z-[3200] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.6)" }}>
+          <div className="flex flex-col gap-5 rounded-2xl p-6 shadow-2xl w-full" style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", maxWidth: "380px" }}>
+
+            {/* Header */}
             <div className="flex items-start gap-3">
               <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.25)" }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -655,21 +660,79 @@ export default function GestionRessourcesModal({
               </div>
               <div>
                 <p className="text-sm font-bold" style={{ color: "var(--color-text-primary)" }}>
-                  Supprimer {confirmDelete.prenom} {confirmDelete.nom} ?
+                  {confirmDelete.prenom} {confirmDelete.nom}
                 </p>
-                <p className="text-xs mt-1" style={{ color: "var(--color-text-secondary)" }}>
-                  Cette ressource ne sera plus visible sur la carte ni dans les effectifs. Vous pourrez la rétablir à tout moment.
+                <p className="text-xs mt-0.5" style={{ color: "var(--color-text-secondary)" }}>
+                  Choisissez l&apos;action à effectuer sur cette ressource.
                 </p>
               </div>
             </div>
-            <div className="flex gap-2">
-              <button onClick={() => setConfirmDelete(null)} className="flex-1 py-2.5 rounded-xl text-sm font-semibold" style={{ background: "var(--color-surface-elevated)", border: "1px solid var(--color-border)", color: "var(--color-text-secondary)" }}>
-                Annuler
-              </button>
-              <button onClick={() => { onRemove(confirmDelete); setConfirmDelete(null); }} className="flex-1 py-2.5 rounded-xl text-sm font-bold" style={{ background: "#ef4444", color: "#fff" }}>
-                Supprimer
+
+            {/* Separator */}
+            <div style={{ height: "1px", background: "var(--color-border)" }} />
+
+            {/* Option 1 — Suppression simple */}
+            <div className="flex flex-col gap-2 p-3 rounded-xl" style={{ background: "var(--color-surface-elevated)", border: "1px solid var(--color-border)" }}>
+              <div className="flex items-center gap-2">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-secondary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+                </svg>
+                <span className="text-xs font-bold" style={{ color: "var(--color-text-primary)" }}>Masquer de la carte</span>
+              </div>
+              <p className="text-xs leading-relaxed" style={{ color: "var(--color-text-secondary)" }}>
+                La ressource disparait de la carte et des effectifs. Le compte utilisateur est conservé. Vous pourrez la rétablir à tout moment.
+              </p>
+              <button
+                onClick={() => { onRemove(confirmDelete); setConfirmDelete(null); }}
+                className="w-full py-2 rounded-lg text-xs font-bold transition-all hover:opacity-80"
+                style={{ background: "rgba(100,116,139,0.2)", border: "1px solid rgba(100,116,139,0.35)", color: "var(--color-text-primary)" }}
+              >
+                Masquer
               </button>
             </div>
+
+            {/* Option 2 — Révocation complète */}
+            <div className="flex flex-col gap-2 p-3 rounded-xl" style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.25)" }}>
+              <div className="flex items-center gap-2">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                  <polyline points="16 17 21 12 16 7"/>
+                  <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                <span className="text-xs font-bold" style={{ color: "#ef4444" }}>Révoquer les droits</span>
+              </div>
+              <p className="text-xs leading-relaxed" style={{ color: "var(--color-text-secondary)" }}>
+                Supprime la ressource <strong style={{ color: "var(--color-text-primary)" }}>et le compte utilisateur associé</strong>. La personne devra se réinscrire intégralement et vérifier son adresse e-mail. Action irréversible.
+              </p>
+              <button
+                disabled={revokeLoading}
+                onClick={async () => {
+                  setRevokeLoading(true);
+                  try {
+                    await onRevoke(confirmDelete);
+                    setConfirmDelete(null);
+                    setAddSuccess(`Droits de ${confirmDelete.prenom} ${confirmDelete.nom} révoqués.`);
+                    setTimeout(() => setAddSuccess(""), 4000);
+                  } finally {
+                    setRevokeLoading(false);
+                  }
+                }}
+                className="w-full py-2 rounded-lg text-xs font-bold transition-all hover:opacity-80 disabled:opacity-50"
+                style={{ background: "#ef4444", color: "#fff" }}
+              >
+                {revokeLoading ? "Révocation…" : "Révoquer les droits"}
+              </button>
+            </div>
+
+            {/* Cancel */}
+            <button
+              onClick={() => setConfirmDelete(null)}
+              disabled={revokeLoading}
+              className="w-full py-2.5 rounded-xl text-sm font-semibold"
+              style={{ background: "var(--color-surface-elevated)", border: "1px solid var(--color-border)", color: "var(--color-text-secondary)" }}
+            >
+              Annuler
+            </button>
           </div>
         </div>
       )}

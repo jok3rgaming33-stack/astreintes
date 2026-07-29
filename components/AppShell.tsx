@@ -15,6 +15,7 @@ import {
   removeIncident,
   getPersonStatuses,
   upsertPersonStatus,
+  revokeResource,
 } from "@/app/actions/shared-state";
 import NotificationBanner from "@/components/NotificationBanner";
 import EffectifsModal from "@/components/EffectifsModal";
@@ -681,6 +682,12 @@ export default function AppShell({
         onRemove={removePerson}
         onRestore={restorePerson}
         onUpdate={updatePerson}
+        onRevoke={async (person) => {
+          if (!person.id) return;
+          await revokeResource(person.id);
+          // Remove from local state immediately
+          removePerson(person);
+        }}
         isRemoved={isRemoved}
         isCustom={isCustom}
         canManageRessources={canManageRessources}
