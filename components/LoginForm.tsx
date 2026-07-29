@@ -4,23 +4,27 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { PEOPLE } from "@/lib/people";
-import { EMAIL_TO_NOM, EMAIL_TO_ROLE } from "@/lib/emailToNom";
+import { EMAIL_TO_NOM } from "@/lib/emailToNom";
 
 type Mode = "signin" | "signup";
+type Step = "form" | "postal";   // postal = code postal verification after signup
 
 export default function LoginForm() {
   const router = useRouter();
   const [mode, setMode] = useState<Mode>("signin");
+  const [step, setStep] = useState<Step>("form");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [codePostal, setCodePostal] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [verificationSent, setVerificationSent] = useState(false);
+  const [verifySuccess, setVerifySuccess] = useState(false);
 
   const knownEmail = email.toLowerCase().trim();
   const isKnownEmail = knownEmail in EMAIL_TO_NOM;
 
+  // ── Step 1 : signup / signin form ─────────────────────────────────────────
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
@@ -57,8 +61,8 @@ export default function LoginForm() {
           setError(result.error.message ?? "Erreur lors de la création du compte.");
           return;
         }
-        // Email verification required — show confirmation screen
-        setVerificationSent(true);
+        // Move to postal code verification step
+        setStep("postal");
       } else {
         const result = await authClient.signIn.email({
           email: knownEmail,
@@ -66,8 +70,8 @@ export default function LoginForm() {
         });
         if (result.error) {
           const msg = result.error.message ?? "";
-          if (msg.toLowerCase().includes("email") && msg.toLowerCase().includes("verif")) {
-            setError("Votre adresse e-mail n'a pas encore été vérifiée. Consultez votre boite mail et cliquez sur le lien de confirmation.");
+          if (msg.toLowerCase().includes("verif") || msg.toLowerCase().includes("email")) {
+            setError("Votre compte n'est pas encore activé. Si vous venez de vous inscrire, saisissez votre code postal pour valider votre compte.");
           } else {
             setError("Identifiants incorrects. Vérifiez votre e-mail et mot de passe.");
           }
@@ -83,41 +87,166 @@ export default function LoginForm() {
     }
   }
 
-  if (verificationSent) {
-    return (
-      <div className="flex flex-col items-center gap-5 py-4 text-center">
-        <div className="flex items-center justify-center w-16 h-16 rounded-full" style={{ background: "rgba(56,189,248,0.12)", border: "2px solid rgba(56,189,248,0.3)" }}>
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <rect width="20" height="16" x="2" y="4" rx="2"/>
-            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
-          </svg>
+  // ── Step 2 : postal code verification ────────────────────────────────────
+  async function handleVerifyPostal(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    if (!codePostal.trim()) {
+      setError("Veuillez saisir votre code postal.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch("/api/verify-postal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: knownEmail, codePostal: codePostal.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Code postal incorrect.");
+        return;
+      }
+      setVerifySuccess(true);
+      // Auto-redirect to login after 2 s
+      setTimeout(() => {
+        setStep("form");
+        setMode("signin");
+        setPassword("");
+        setConfirmPassword("");
+        setCodePostal("");
+        setVerifySuccess(false);
+        setError("");
+      }, 2500);
+    } catch {
+      setError("Erreur réseau. Réessayez.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // ── Render : postal code step ─────────────────────────────────────────────
+  if (step === "postal") {
+    if (verifySuccess) {
+      return (
+        <div className="flex flex-col items-center gap-5 py-4 text-center">
+          <div
+            className="flex items-center justify-center w-16 h-16 rounded-full"
+            style={{ background: "rgba(34,197,94,0.12)", border: "2px solid rgba(34,197,94,0.35)" }}
+          >
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <p className="text-base font-bold" style={{ color: "var(--color-text-primary)" }}>
+              Compte activé !
+            </p>
+            <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>
+              Redirection vers la connexion...
+            </p>
+          </div>
         </div>
-        <div className="flex flex-col gap-2">
-          <h3 className="text-base font-bold" style={{ color: "var(--color-text-primary)" }}>
-            Vérifiez votre boite mail
-          </h3>
-          <p className="text-sm leading-relaxed" style={{ color: "var(--color-text-secondary)" }}>
-            Un e-mail de confirmation a été envoyé à{" "}
-            <span className="font-semibold" style={{ color: "#38bdf8" }}>{email}</span>.
-            <br />
-            Cliquez sur le lien dans l&apos;e-mail pour activer votre compte.
+      );
+    }
+
+    return (
+      <form onSubmit={handleVerifyPostal} className="flex flex-col gap-5">
+        {/* Header */}
+        <div className="flex flex-col gap-2 text-center">
+          <div
+            className="flex items-center justify-center w-14 h-14 rounded-2xl mx-auto"
+            style={{ background: "rgba(56,189,248,0.1)", border: "1px solid rgba(56,189,248,0.25)" }}
+          >
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0z"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
+          </div>
+          <p className="text-sm font-bold" style={{ color: "var(--color-text-primary)" }}>
+            Vérification de votre identité
+          </p>
+          <p className="text-xs leading-relaxed" style={{ color: "var(--color-text-secondary)" }}>
+            Saisissez le code postal de votre ville de résidence
+            pour activer votre compte.
+          </p>
+          <p className="text-xs font-medium" style={{ color: "#38bdf8" }}>
+            {knownEmail}
           </p>
         </div>
-        <p className="text-xs" style={{ color: "var(--color-text-secondary)" }}>
-          Vous ne l&apos;avez pas reçu ?{" "}
-          <button
-            type="button"
-            onClick={() => { setVerificationSent(false); setMode("signup"); }}
-            className="font-semibold underline underline-offset-2"
-            style={{ color: "#38bdf8" }}
-          >
-            Réessayer
-          </button>
-        </p>
-      </div>
+
+        {/* Postal code input */}
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="codePostal" className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-secondary)" }}>
+            Code postal
+          </label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--color-text-secondary)" }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0z"/>
+                <circle cx="12" cy="10" r="3"/>
+              </svg>
+            </span>
+            <input
+              id="codePostal"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]{5}"
+              maxLength={5}
+              required
+              autoFocus
+              value={codePostal}
+              onChange={(e) => setCodePostal(e.target.value.replace(/\D/g, ""))}
+              placeholder="75001"
+              className="w-full pl-10 pr-4 py-3 rounded-xl text-sm outline-none transition-all tracking-widest font-mono"
+              style={{
+                background: "rgba(15,23,42,0.7)",
+                border: "1px solid rgba(56,189,248,0.2)",
+                color: "var(--color-text-primary)",
+              }}
+              onFocus={(e) => { e.currentTarget.style.border = "1px solid rgba(56,189,248,0.6)"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(56,189,248,0.08)"; }}
+              onBlur={(e) => { e.currentTarget.style.border = "1px solid rgba(56,189,248,0.2)"; e.currentTarget.style.boxShadow = "none"; }}
+            />
+          </div>
+        </div>
+
+        {/* Error */}
+        {error && (
+          <div className="flex items-start gap-2 px-3 py-2.5 rounded-xl" style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)" }}>
+            <svg className="flex-shrink-0 mt-0.5" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+            </svg>
+            <p className="text-xs leading-relaxed" style={{ color: "#ef4444" }}>{error}</p>
+          </div>
+        )}
+
+        {/* Submit */}
+        <button
+          type="submit"
+          disabled={loading || codePostal.length !== 5}
+          className="w-full py-3 rounded-xl text-sm font-bold tracking-wide transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{
+            background: "linear-gradient(135deg, #0ea5e9, #38bdf8)",
+            color: "#0f172a",
+            boxShadow: "0 0 20px rgba(56,189,248,0.25)",
+          }}
+        >
+          {loading ? "Vérification..." : "Activer mon compte"}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => { setStep("form"); setMode("signup"); setError(""); }}
+          className="text-xs text-center underline underline-offset-2"
+          style={{ color: "var(--color-text-secondary)" }}
+        >
+          Recommencer l&apos;inscription
+        </button>
+      </form>
     );
   }
 
+  // ── Render : main signin / signup form ────────────────────────────────────
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       {/* Email */}
@@ -190,7 +319,7 @@ export default function LoginForm() {
         </div>
       </div>
 
-      {/* Confirm password (signup only) */}
+      {/* Confirm password */}
       {mode === "signup" && (
         <div className="flex flex-col gap-1.5">
           <label htmlFor="confirm" className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-secondary)" }}>
@@ -230,9 +359,7 @@ export default function LoginForm() {
       {error && (
         <div className="flex items-start gap-2 px-3 py-2.5 rounded-xl" style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)" }}>
           <svg className="flex-shrink-0 mt-0.5" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="15" y1="9" x2="9" y2="15"/>
-            <line x1="9" y1="9" x2="15" y2="15"/>
+            <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
           </svg>
           <p className="text-xs leading-relaxed" style={{ color: "#ef4444" }}>{error}</p>
         </div>
@@ -249,25 +376,21 @@ export default function LoginForm() {
           boxShadow: loading ? "none" : "0 0 20px rgba(56,189,248,0.3)",
         }}
       >
-        {loading
-          ? "Connexion en cours..."
-          : mode === "signin"
-            ? "Se connecter"
-            : "Créer mon compte"}
+        {loading ? "Connexion en cours..." : mode === "signin" ? "Se connecter" : "Créer mon compte"}
       </button>
 
       {/* Mode toggle */}
       <p className="text-center text-xs" style={{ color: "var(--color-text-secondary)" }}>
         {mode === "signin" ? (
           <>
-            Première connexion ?{" "}
+            Premiere connexion ?{" "}
             <button type="button" onClick={() => { setMode("signup"); setError(""); }} className="font-semibold underline underline-offset-2" style={{ color: "#38bdf8" }}>
-              Créer un compte
+              Creer un compte
             </button>
           </>
         ) : (
           <>
-            Déjà un compte ?{" "}
+            Deja un compte ?{" "}
             <button type="button" onClick={() => { setMode("signin"); setError(""); }} className="font-semibold underline underline-offset-2" style={{ color: "#38bdf8" }}>
               Se connecter
             </button>
