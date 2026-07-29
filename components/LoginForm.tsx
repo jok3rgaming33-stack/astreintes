@@ -16,6 +16,7 @@ export default function LoginForm() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [verificationSent, setVerificationSent] = useState(false);
 
   const knownEmail = email.toLowerCase().trim();
   const isKnownEmail = knownEmail in EMAIL_TO_NOM;
@@ -56,16 +57,20 @@ export default function LoginForm() {
           setError(result.error.message ?? "Erreur lors de la création du compte.");
           return;
         }
-        // After signup the role is "user" by default; admin must set it.
-        router.push("/");
-        router.refresh();
+        // Email verification required — show confirmation screen
+        setVerificationSent(true);
       } else {
         const result = await authClient.signIn.email({
           email: knownEmail,
           password,
         });
         if (result.error) {
-          setError("Identifiants incorrects. Vérifiez votre e-mail et mot de passe.");
+          const msg = result.error.message ?? "";
+          if (msg.toLowerCase().includes("email") && msg.toLowerCase().includes("verif")) {
+            setError("Votre adresse e-mail n'a pas encore été vérifiée. Consultez votre boite mail et cliquez sur le lien de confirmation.");
+          } else {
+            setError("Identifiants incorrects. Vérifiez votre e-mail et mot de passe.");
+          }
           return;
         }
         router.push("/");
@@ -76,6 +81,41 @@ export default function LoginForm() {
     } finally {
       setLoading(false);
     }
+  }
+
+  if (verificationSent) {
+    return (
+      <div className="flex flex-col items-center gap-5 py-4 text-center">
+        <div className="flex items-center justify-center w-16 h-16 rounded-full" style={{ background: "rgba(56,189,248,0.12)", border: "2px solid rgba(56,189,248,0.3)" }}>
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <rect width="20" height="16" x="2" y="4" rx="2"/>
+            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+          </svg>
+        </div>
+        <div className="flex flex-col gap-2">
+          <h3 className="text-base font-bold" style={{ color: "var(--color-text-primary)" }}>
+            Vérifiez votre boite mail
+          </h3>
+          <p className="text-sm leading-relaxed" style={{ color: "var(--color-text-secondary)" }}>
+            Un e-mail de confirmation a été envoyé à{" "}
+            <span className="font-semibold" style={{ color: "#38bdf8" }}>{email}</span>.
+            <br />
+            Cliquez sur le lien dans l&apos;e-mail pour activer votre compte.
+          </p>
+        </div>
+        <p className="text-xs" style={{ color: "var(--color-text-secondary)" }}>
+          Vous ne l&apos;avez pas reçu ?{" "}
+          <button
+            type="button"
+            onClick={() => { setVerificationSent(false); setMode("signup"); }}
+            className="font-semibold underline underline-offset-2"
+            style={{ color: "#38bdf8" }}
+          >
+            Réessayer
+          </button>
+        </p>
+      </div>
+    );
   }
 
   return (
